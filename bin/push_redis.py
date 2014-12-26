@@ -15,8 +15,9 @@ import json
 import logging
 import logging.config
 from rediscluster import RedisCluster
+import ConfigParser
 ########################################
-# PATH CONFOGURATION
+# LOAD CONFOGURATION
 ########################################
 
 # init config parser
@@ -47,7 +48,7 @@ with open(params["conf"] + config.get('Redis','json'),"r") as jsonfile:
 redis_clients = RedisCluster(startup_nodes=startup_nodes, decode_responses=True)
 EXPIRE_THREE_DAYS = config.getint('Redis','expire') * 24 * 60 *60
 
-def upload(source_file):
+def push(source_file):
     start = time.time()
     # get name sequentially
     with open(source_file,'r') as file:
@@ -89,7 +90,7 @@ if __name__ == "__main__":
     num_of_files = len(all_files)
     for current_in_path in all_files:
         current_in_file = current_in_path.split('/')[-1]
-        status = upload(current_in_path)
+        status = push(current_in_path)
         if status==0:
             logger_redis.info('[%s] Done' % current_in_file)
         else:
