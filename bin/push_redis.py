@@ -3,7 +3,7 @@
 '''
 run_upload - push computed result to redis
 
-@author:     bingqing qu
+@author:     Bingqing Qu
 
 @license:    MIT
 

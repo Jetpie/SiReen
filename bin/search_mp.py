@@ -3,7 +3,7 @@
 '''
 run_compute_mp - muilti-processing nearest neighbor searching
 
-@author: bingqing qu
+@author:  Bingqing Qu
 
 @license: MIT
 
