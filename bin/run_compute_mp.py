@@ -29,7 +29,7 @@ LOG = HOME + 'log/'
 CONF = HOME + 'conf/'
 LIB = HOME + 'lib/'
 sys.path.append(LIB)
-from recsearch.nearest_neighbour import KNearestSearch
+from nenese.nearest_neighbour import KNearestSearch
 
 ########################################
 # PATH CONFOGURATION
