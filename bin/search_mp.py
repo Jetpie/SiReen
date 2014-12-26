@@ -31,7 +31,7 @@ params = dict(config.items(section))
 sys.path.append(params['lib'])
 from nenese.nearest_neighbour import KNearestSearch
 # number of processes
-PROCESSES = config.getint('Process','number')
+PROCESSES = config.getint('Search','processes')
 
 ########################################
 # LOGGER CONFIGURATION
