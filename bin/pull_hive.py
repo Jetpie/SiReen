@@ -58,7 +58,7 @@ logger_hive.info("\tStart")
 
 # refresh the result file
 open(result_file,"w").close()
-
+os.chomd(result_file,666)
 status=os.system("su - hadoop-cdh -c \' hive -S -e \"" + HIVE_QL + \
                  "\" > "+ result_file+"\'")
 
