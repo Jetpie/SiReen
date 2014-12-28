@@ -56,18 +56,8 @@ logger_hive.debug(HIVE_QL)
 result_file = params['conf'] + "sql" + PID + ".txt"
 logger_hive.info("\tStart")
 
-# first to download data file from hadoop
-
-
-# status=os.system("touch "+LOADING_FILE)
-
-# status=os.system("chmod a+rw "+LOADING_FILE)
-
-# if status==0:
-#     logger.info("chmod a+rw"+LOADING_FILE+" finished.")
-# else:
-#     logger.error("chmod a+rw"+LOADING_FILE+" failed.")
-#     sys.exit(1)
+# refresh the result file
+open(result_file,"w").close()
 
 status=os.system("su - hadoop-cdh -c \' hive -S -e \"" + HIVE_QL + \
                  "\" > "+ result_file+"\'")
