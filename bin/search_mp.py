@@ -18,7 +18,6 @@ import ConfigParser
 ########################################
 # LOAD CONFIGURATION
 #######################################
-
 # init config parser
 config = ConfigParser.ConfigParser()
 config.read("init.cfg")
@@ -44,13 +43,15 @@ logger_fail = logging.getLogger("fail")
 def search(current_in_path):
     #  split to get current file
     current_in_file = current_in_path.split('/')[-1]
+    start = time.time()
     try:
         logger_detail = logging.getLogger("detail")
         kns = KNearestSearch(logger = logger_detail,delimiter = "\t",use_sparse = True)
         kns.process(in_file = current_in_path,
                     out_file = params["result"] + current_in_file,
-                    max_chunk_size = 2000)
-        logger_search.info('[%s] Done' % current_in_file)
+                    max_chunk_size = config.getint('Search','chunk'))
+        logger_search.info('[%s] Done (Elasped Time: %f)' % \
+                           (current_in_file,time.time()-start))
         return 0
     except:
         logger_search.error('[%s] Fail' % current_in_file)
