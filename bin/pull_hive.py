@@ -53,7 +53,7 @@ HIVE_QL = hive_temp.safe_substitute({"CATES":categories})
 logger_hive.debug("HIVE_QL:")
 logger_hive.debug(HIVE_QL)
 
-result_file = params['conf'] + "sql" + PID + ".txt"
+result_file = params['res'] + "sql" + PID + ".txt"
 logger_hive.info("\tStart")
 
 # refresh the result file
