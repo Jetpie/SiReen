@@ -68,7 +68,7 @@ else:
     logger_hive.error("Fail to donwload data from hive")
     logger_fail.error("Fail to donwload data from hive")
 
-lines=os.popen("wc -l "+result_file,'r').readline()
+lines=os.popen("wc -l "+result_file,'r').readlines()[0].strip()
 if lines < MIN_ROW_SIZE:
     logger_hive.error("Number of items download from hive not enough")
     logger_fail.error("Number of items download from hive not enough")
@@ -82,7 +82,7 @@ if len(glob.glob(params['sqldata'] + '/*')) > 0:
 with open(result_file,'r') as sql:
     for line in sql:
         cur_cat = line.split('\x01')[0]
-        with open(param['sqldata'] + cur_cat + '.txt','a') as out:
+        with open(params['sqldata'] + cur_cat + '.txt','a') as out:
             out.write(line)
 logger_hive.info("Data splited")
 logger_hive.info("\tEnd")
