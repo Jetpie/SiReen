@@ -83,7 +83,7 @@ if lines < MIN_ROW_SIZE:
     logger_hive.error("Number of items download from hive not enough")
     logger_fail.error("Number of items download from hive not enough")
     sys.exit(-1)
-logger_hive.info("Number of items download from hive: %d" % lines)
+logger_hive.info("Number of items download from hive: %s" % lines)
 
 if len(glob.glob(params['sqldata'] + '/*')) > 0:
     logger_hive.error("[sqldata] directory not empty")
