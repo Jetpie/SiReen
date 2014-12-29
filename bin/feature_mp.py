@@ -30,6 +30,7 @@ params = dict(config.items(section))
 PROCESSES = config.getint('Feature','processes')
 # feature extraction program
 PROG=params['bin']+config.get('Feature','program')
+PID_FILE = params['conf'] + config.get('Feature','pid')
 ########################################
 # LOGGER CONFIGURATION
 ########################################
