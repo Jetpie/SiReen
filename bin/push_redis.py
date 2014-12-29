@@ -85,7 +85,7 @@ if __name__ == "__main__":
     start = time.time()
 
     # list all available files
-    all_files = glob.glob(RESULT + '*.txt')
+    all_files = glob.glob( params['result'] + '*.txt')
 
     num_of_files = len(all_files)
     for current_in_path in all_files:
