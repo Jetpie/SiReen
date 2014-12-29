@@ -44,7 +44,7 @@ def run_cmd(cat):
     """run c++ program by calling shell"""
     CMD = PROG + \
       ' -c ' + cat +\
-      ' -s ' + params['sqldata'] + '.txt' + \
+      ' -s ' + params['sqldata'] + \
       ' -r ' + params['data'] + \
       ' -d ' + params['res'] + 'codebook/' +\
       ' -g ' + params['home'] + 'log/log_f/' + \
@@ -53,7 +53,7 @@ def run_cmd(cat):
     status = os.system(CMD)
     if status==0:
         logger_feature.info('[%s] Done (Elasped Time: %f)' % \
-                           (current_in_file,time.time()-start))
+                           (cat,time.time()-start))
         with open(PID_FILE , 'a') as pid:
             pid.write(cat + '\n')
     else:
