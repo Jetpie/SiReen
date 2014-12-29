@@ -42,7 +42,7 @@ logger_fail = logging.getLogger("fail")
 
 def run_cmd(cat):
     """run c++ program by calling shell"""
-    CMD = PROG + '-c ' + cat
+    CMD = PROG + ' -c ' + cat
     logger_feature.debug("%s"%CMD)
     status = os.system(CMD)
     if status==0:
