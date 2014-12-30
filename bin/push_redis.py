@@ -10,7 +10,7 @@ run_upload - push computed result to redis
 @contact:    sylar.qu@gmail.com
 
 '''
-import glob,os,time
+import glob,os,time,sys
 import json
 import logging
 import logging.config
@@ -22,7 +22,7 @@ import ConfigParser
 
 # init config parser
 config = ConfigParser.ConfigParser()
-config.read("init.cfg")
+config.read(sys.path[0] + "/init.cfg")
 # get localhost names
 lh_names = config.get('Hostname','local').split(',')
 # determine section

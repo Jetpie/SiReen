@@ -10,7 +10,7 @@ run_feature_mp - feature extraction multiprocessing
 @contact: sylar.qu@gmail.com
 
 '''
-import glob,os,time,logging
+import glob,os,time,logging,sys
 import logging.config
 from multiprocessing import Pool
 import ConfigParser
@@ -20,7 +20,7 @@ import ConfigParser
 
 # init config parser
 config = ConfigParser.ConfigParser()
-config.read("init.cfg")
+config.read(sys.path[0] + "/init.cfg")
 # get localhost names
 lh_names = config.get('Hostname','local').split(',')
 # determine section
@@ -46,9 +46,9 @@ def run_cmd(cat):
       ' -c ' + cat +\
       ' -s ' + params['sqldata'] + \
       ' -r ' + params['data'] + \
-      ' -d ' + params['res'] + 'codebook/' +\
+      ' -d ' + params['codebook'] +\
       ' -g ' + params['home'] + 'log/log_f/' + \
-      ' -l ' + params['res'] + 'llc/'
+      ' -l ' + params['llc']
     logger_feature.debug("%s"%CMD)
     status = os.system(CMD)
     if status==0:

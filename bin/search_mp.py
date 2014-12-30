@@ -20,7 +20,7 @@ import ConfigParser
 #######################################
 # init config parser
 config = ConfigParser.ConfigParser()
-config.read("init.cfg")
+config.read(sys.path[0] + "/init.cfg")
 # get localhost names
 lh_names = config.get('Hostname','local').split(',')
 # determine section
