@@ -1,0 +1,5 @@
+SELECT concat_ws(cast(unhex('1') as string), cast(category_id as string), url_md5,img_url, cast(merchant_id as string),cast(product_weight as string),cast(commosion as string),cast(prod_state as string))
+FROM gwk.product_offline
+WHERE length(img_url)>5 and product_weight>=20
+AND (prod_state=0 OR prod_state=2 OR prod_state=3 OR prod_state=8)
+AND substr(category_id,0,10) in( $CATES );
