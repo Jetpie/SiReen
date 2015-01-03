@@ -39,8 +39,9 @@ public:
     ImageCoder(void);
     ImageCoder(int,int,int);
     ~ImageCoder(void);
-    VlDsiftFilter* dsiftDescripter(Mat srcImage, int& size, intt binSize);
-    string llcDescripter(float* dsiftDescripter, float* B int ncb, int size);
-    float* normalizedSift(float * descripters, int size);
+
+    VlDsiftFilter* dsiftDescripter(Mat srcImage, int& size, int binSize);
+    string llcDescripter(float* dsiftDescripter, float* B, int ncb, int size);
+    float* normalizeSift(float * descripters, int size);
 
 };

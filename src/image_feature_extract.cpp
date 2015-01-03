@@ -32,54 +32,41 @@ ImageCoder::ImageCoder(int stdWidth, int stdHeight, int step)
  */
 VlDsiftFilter* ImageCoder::dsiftDescripter(Mat srcImage, int& size, int binSize)
 {
-    // IplImage *stdImg = cvCreateImage(CvSize(this->stdWidth,this->stdHeight),
-    //                                 srcImg->depth,srcImg->nChannels);
-    // cvResize(srcImg, stdImg, CV_INTER_LINEAR);
-    // // validate image
-    // if (dstImg == NULL)
-    //     return 0;
-
-    vl_sift_pix *im = new vl_sift_pix[stdImg->height * stdImg->width];
-    unsigned char *Pixel;
-    for (int i=0; i<stdImg->height; i++)
-    {
-        for (int j=0; j<stdImg->width; j++)
-        {
-            Pixel = (unsigned char*)(stdImg->imageData+i * stdImg->width+j);
-            im[i*stdImg->width+j] = *(Pixel);
-        }
-    }
-
-
-    // init descriptors
-    VlDsiftFilter *DsiftFilt = NULL;
-    DsiftFilt = vl_dsift_new_basic(Image->width,Image->height,step,binSize);
-    int descr_size, n_points;
-
-    // get descriptors
-    vl_dsift_set_flat_window(DsiftFilt,'true');
-    vl_dsift_process (DsiftFilt, ImageData);
-    descr_size = vl_dsift_get_descriptor_size(DsiftFilt);
-    n_points = vl_dsift_get_keypoint_num(DsiftFilt);
-    size = size + descr_size*n_points;
-    //normalizedSift(DsiftFilt->descrs, size);
-
-    delete []ImageData;
-    ImageData = NULL;
-    cvReleaseImage(&Image);
-    return DsiftFilt;
-
-//********************************************************************************
+    // check if source image is graylevel
+    Mat grayImage;
+    if (srcImage.channels() != 1)
+        cvtColor(srcImage,grayImage,CV_BGR2GRAY);
+    else
+        grayImage = srcImage;
 
     // resize image
     Mat stdImage;
     resize(srcImage, stdImage, Size(this->stdWidth,this->stdHeight),
            0, 0, INTER_LINEAR);
+
     // validate
     if( ! stdImage.data)
         return 0;
 
+    // init descriptors
+    VlDsiftFilter* dsiftFilter =
+        vl_dsift_new_basic(stdImage.cols, stdImage.rows,
+                           this->step, binSize);
+    // switch off gaussian windowing
+    vl_dsift_set_flat_window(dsiftFilter,'true');
 
+    // convert mat to float vector
+    vector<float> imData;
+    for (int i = 0; i < stdImage.rows; ++i)
+        for (int j = 0; j < stdImage.cols; ++j)
+            imData.push_back(stdImage.at<unsigned char>(i, j));
+    // process an image data
+    vl_dsift_process(dsiftFilter,&imData[0]);
+
+    int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
+    int nKeypoints = vl_dsift_get_keypoint_num(dsiftFilter);
+    size = size + descrSize*nKeypoints;
+    return dsiftFilter;
 }
 
 
@@ -172,8 +159,11 @@ string ImageCoder::llcDescripter(float *Descriptors, float *B, int ncb, int size
     return s.str();
 }
 
-
-float* ImageCoder::normalizedSift(float *Descriptors, int size)
+/*
+ * Normalization of dense sift desripters
+ *
+ */
+float* ImageCoder::normalizeSift(float *Descriptors, int descrSize, int nKeypoints)
 {
     float *normDesc = new float[size];
     float temp,temp1;                                           //temp1和temp为存储每一个patch对应的128维向量的均方根
