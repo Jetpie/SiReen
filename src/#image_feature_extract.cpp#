@@ -237,7 +237,7 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook, int ncb, int k)
     float *pData;
     for(int i=0; i<ncb; i++)
         //
-    {
+    {s
         pData = LLCall.ptr<float>(i);
         maxLocTmp = pData[0];
         for(int j=1; j<nKeypoints; j++)

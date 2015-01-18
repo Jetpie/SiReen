@@ -10,30 +10,75 @@
 int main(int argc, char * argv[])
 {
     string imgPath = "/home/bingqingqu/TAOCP/test_images/test1.jpg";
+    string imgPath2 = "/home/bingqingqu/TAOCP/test_images/test2.jpg";
+    string codebookPath =  "/home/bingqingqu/TAOCP/test_images/cb1008001019.txt";
     Mat src_new = imread(imgPath,0);
+    Mat src_new2 = imread(imgPath2,0);
     IplImage *src_old = cvLoadImage(imgPath.c_str(), 0);
+    IplImage *src_old2 = cvLoadImage(imgPath2.c_str(), 0);
 
     similarKeyFunction kf;
+    similarBasicFunction bf;
     ImageCoder ic;
+
+    float *codebook = new float[128 * 500];
+    // load codebook
+    bf.read_TXT_file(codebookPath.c_str(), codebook);
+
     // reset size and binSize
     int size = 0;
     int binSize = 16;
-
     // initialize
-    VlDsiftFilter* ft_old;
-    VlDsiftFilter* ft_new;
-    ft_old = kf.GetDsift(src_old, size, binSize);
-    ft_new = ic.dsiftDescripter(src_new,size,binSize);
+    clock_t start_old,start_new;
+    start_new = clock();
 
-    float* f_old = ft_old->descrs;
-    float* f_new = ft_new->descrs;
-    for(int i=0 ;i < 100;i++)
-    {
-        for(int j=0;j<128;j++)
-        {
-            cout << f_old[i*128+j]<< ",";
-        }
-        cout << endl;
-    }
+    // float* desc_new=ic.dsiftDescripter(src_new);
+    string llc_new = ic.llcDescripter(src_new, codebook, 500, 5);
+    cout << "time new:" << float(clock() -start_new) << endl;
+
+
+    start_old = clock();
+    VlDsiftFilter* ft_old = kf.GetDsift(src_old, size, binSize);
+    float * desc_old = new float[size];
+    desc_old = bf.normalizedSift(ft_old->descrs, size);
+    // compute the final feature
+    string llcstr = kf.llcCompute(const_cast<float*>(desc_old), codebook, 500, size);
+
+    cout << "time old:" << float(clock() -start_old) << endl;
+    delete codebook;
+    // ----------------------------------------------------
+
+    // for(int i=0 ;i < 100;i++)
+    // {
+    //     for(int j=0;j<128;j++)
+    //     {
+    //         cout << desc_old[i*128+j]-desc_new[i*128+j]<< ",";
+    //     }
+    //     cout << endl;
+    // }
+    // delete ft_old;
+
+
+    // // reset size and binSize
+    // size = 0;
+    // binSize = 16;
+    // start_old = clock();
+    // VlDsiftFilter* ft_old2 = kf.GetDsift(src_old2, size, binSize);
+
+    // float * desc_old2 = new float[size];
+    // desc_old2 = bf.normalizedSift(ft_old2->descrs, size);
+    // cout << "time old:" << float(clock() -start_old) << endl;
+    // start_new = clock();
+    // float* desc_new2=ic.dsiftDescripter(src_new2);
+    // cout << "time new:" << float(clock() -start_new) << endl;
+    // for(int i=0 ;i < 100;i++)
+    // {
+    //     for(int j=0;j<128;j++)
+    //     {
+    //         cout << desc_old2[i*128+j]-desc_new2[i*128+j]<< ",";
+    //     }
+    //     cout << endl;
+    // }
+    // delete ft_old2;
 
 }

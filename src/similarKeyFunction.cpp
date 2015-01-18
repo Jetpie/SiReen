@@ -51,7 +51,6 @@ VlDsiftFilter* similarKeyFunction::GetDsift(IplImage* SrcImage, int& size, int b
     n_points = vl_dsift_get_keypoint_num(DsiftFilt);
     size = size + descr_size*n_points;
     //normalizedSift(DsiftFilt->descrs, size);
-
     delete []ImageData;
     ImageData = NULL;
     cvReleaseImage(&Image);

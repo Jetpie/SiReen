@@ -30,18 +30,29 @@ class ImageCoder
 {
 
 private:
+    /* stand image frame size */
     unsigned int stdWidth;
     unsigned int stdHeight;
+    /* sampling step  */
     unsigned int step;
+    /* bin size */
+    unsigned int binSize;
+    /* dsift filter */
+    VlDsiftFilter* dsiftFilter = NULL;
+
+    void setParams(int stdWidth, int stdHeight, int step, int binSize);
+    float* normalizeSift(float * descripters, int size);
+
 
 public:
-    /* Constructer and Deconstructer */
+    /* Constructer and Destructer */
     ImageCoder(void);
-    ImageCoder(int,int,int);
+    ImageCoder(int,int,int,int);
+    ImageCoder(VlDsiftFilter*);
     ~ImageCoder(void);
 
-    VlDsiftFilter* dsiftDescripter(Mat srcImage, int& size, int binSize);
-    string llcDescripter(float* dsiftDescripter, float* B, int ncb, int size);
-    float* normalizeSift(float * descripters, int size);
+    float* dsiftDescripter(Mat srcImage);
+    string llcDescripter(Mat srcImage, float* codebook, int ncb, int k);
+
 
 };
