@@ -89,6 +89,8 @@ string similarKeyFunction::llcCompute(float *Descriptors, float *B, int ncb, int
     cv::sortIdx(DD - 2*Desc*codebook.t() + BB,idx,0);
     IDX = idx(rect);
     DD.release(), Dd.release(), BB.release(), Bb.release();
+    // cout << IDX << endl;
+    // cout << "IDX:" << IDX.rows << "," << IDX.cols << endl;
 
     II = Mat::eye(knn,knn,CV_32FC1);
     II = II.mul(1e-4);
@@ -111,7 +113,6 @@ string similarKeyFunction::llcCompute(float *Descriptors, float *B, int ncb, int
     Ctmp.release(), Z.release(), II.release(), idx.release();
     transpose(LLCall,LLCall);                                               // 算得全局LLC编码
     //cout << "LLCall = " << endl << " " << LLCall << endl << endl;
-
     /************** 3.通过for循环从矩阵LLCall中读取最大值作为LLC编码，存入LLC数组 ************/
     float maxLocTmp;                                                        // 每个patch的LLC系数存储
     float sumSqrtMax = 0;

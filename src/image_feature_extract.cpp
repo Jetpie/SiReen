@@ -129,45 +129,6 @@ ImageCoder::dsiftDescripter(Mat srcImage)
                                descrSize*nKeypoints);
 }
 
-// float* ImageCoder::dsiftDescripter(Mat srcImage, int& size, int binSize)
-// {
-//     // check if source image is graylevel
-//     Mat grayImage;
-//     if (srcImage.channels() != 1)
-//         cvtColor(srcImage,grayImage,CV_BGR2GRAY);
-//     else
-//         grayImage = srcImage;
-
-//     // resize image
-//     Mat stdImage;
-//     resize(srcImage, stdImage, Size(this->stdWidth,this->stdHeight),
-//            0, 0, INTER_LINEAR);
-
-//     // validate
-//     if( ! stdImage.data)
-//         return 0;
-
-//     // init descriptors
-//     VlDsiftFilter* dsiftFilter =
-//         vl_dsift_new_basic(stdImage.cols, stdImage.rows,
-//                            this->step, binSize);
-//     // switch off gaussian windowing
-//     vl_dsift_set_flat_window(dsiftFilter,true);
-
-//     // convert mat to float vector
-//     vector<float> imData;
-//     for (int i = 0; i < stdImage.rows; ++i)
-//         for (int j = 0; j < stdImage.cols; ++j)
-//             imData.push_back(stdImage.at<unsigned char>(i, j));
-//     // process an image data
-//     vl_dsift_process(dsiftFilter,&imData[0]);
-
-//     int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
-//     int nKeypoints = vl_dsift_get_keypoint_num(dsiftFilter);
-//     size = size + descrSize*nKeypoints;
-//     return this->normalizeSift(dsiftFilter->descrs, descrSize*nKeypoints);
-
-// }
 
 
 string
@@ -182,7 +143,7 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook, int ncb, int k)
 
     // initialize dsift descripters and codebook opencv matrix
     Mat dsiftMat = cv::Mat(nKeypoints, descrSize, CV_32FC1, dsiftDescr);
-    Mat cbMat = cv::Mat(ncb , descrSize, CV_32FC1, dsiftDescr);
+    Mat cbMat = cv::Mat(ncb , descrSize, CV_32FC1, codebook);
 
     /*** Step 1 - compute eucliean distance and sort ***/
 
@@ -191,11 +152,11 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook, int ncb, int k)
     cv::reduce(dsiftMat.mul(dsiftMat), ddnorm2, 1, CV_REDUCE_SUM);
     cv::reduce(cbMat.mul(cbMat), cbnorm2, 1, CV_REDUCE_SUM);
 
-    Mat sortedIdx, IDX, II, Ctmp;
+    Mat sortedIdx;
     cv::sortIdx(
         // euclidean: u^2 + v^2 + 2uv
         repeat(ddnorm2,1,ncb) +
-        repeat(cbnorm2.t(),nKeypoints,1) +
+        repeat(cbnorm2.t(),nKeypoints,1) -
         2 * dsiftMat * cbMat.t(),
         // output mat
         sortedIdx,
@@ -207,62 +168,60 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook, int ncb, int k)
 
     /*** Step 2 - get knn from codebook***/
     float *LLC = new float[ncb];
-    nearestIdx = sortedIdx(Rect(0,0,k,nKeypoints));
-    cout << "IDX:" << nearestIdx.rows << "," << nearestIdx.cols << endl;
-    II = Mat::eye(k,k,CV_32FC1);
-    II = II.mul(1e-4);
+    Mat knnIdx = sortedIdx(Rect(0,0,k,nKeypoints));
+    // cout << "knnIdx:" << knnIdx.rows << "," << knnIdx.cols << endl;
+    // cout << knnIdx<<endl;
+
+    Mat diagDist = Mat::eye(k,k,CV_32FC1);
+    diagDist = diagDist.mul(1e-4);
+
     Mat LLCall = Mat::zeros(nKeypoints,ncb,CV_32FC1);
-    Mat Z = Mat::zeros(k,descrSize,CV_32FC1);
+    Mat U = Mat::zeros(k,descrSize,CV_32FC1);
+    Mat cov;
     for(int i=0; i<nKeypoints; i++)
     {
         for(int ii=0; ii<k; ii++)
         {
-            Z.row(ii) = abs(cbMat.row(nearestIdx.at<int>(i,ii) ) - dsiftMat.row(i));
+            U.row(ii) = abs(cbMat.row(knnIdx.at<int>(i,ii) ) - dsiftMat.row(i));
         }
+        // covariance = U^T * U
+        mulTransposed(U, cov , 0);
 
-        mulTransposed(Z, Ctmp, 0);
-        Mat C = Ctmp + II.mul(trace(Ctmp));
-        Mat LLCtmp = C.inv()*Mat::ones(k,1,CV_32FC1);
-        divide(LLCtmp,sum(LLCtmp),LLCtmp);
+        Mat cHat;
+        solve(cov + diagDist.mul(trace(cov)),Mat::ones(k,1,CV_32FC1),cHat);
+        divide(cHat,sum(cHat),cHat);
+
         for(int j=0; j<k; j++)
-            LLCall.at<float>(i,IDX.at<int>(i,j)) = LLCtmp.at<float>(j,0);
+            LLCall.at<float>(i,knnIdx.at<int>(i,j)) = cHat.at<float>(j,0);
     }
-    Ctmp.release(), Z.release(), II.release(), idx.release();
-    transpose(LLCall,LLCall);                                               // 算得全局LLC编码
-    //cout << "LLCall = " << endl << " " << LLCall << endl << endl;
+    cov.release(), U.release(), diagDist.release(), sortedIdx.release();
+    transpose(LLCall,LLCall);
 
-    /************** 3.通过for循环从矩阵LLCall中读取最大值作为LLC编码，存入LLC数组 ************/
-    float maxLocTmp;                                                        // 每个patch的LLC系数存储
-    float sumSqrtMax = 0;
-    float *pData;
+    /*** Step3 - get llc descripter***/
+    // prune the maximum value for each LLC
+    float max;
+    float sumSqrt = 0;
     for(int i=0; i<ncb; i++)
-        //
     {
-        pData = LLCall.ptr<float>(i);
-        maxLocTmp = pData[0];
+        max = LLCall.at<float>(i,0);
         for(int j=1; j<nKeypoints; j++)
         {
-            if(pData[j] > maxLocTmp)
-                maxLocTmp = pData[j];
+            if(LLCall.at<float>(i,j)> max)
+                max = LLCall.at<float>(i,j);
         }
-        LLC[i] = maxLocTmp;
-        sumSqrtMax = sumSqrtMax + maxLocTmp*maxLocTmp;
-        //cout << "LLC = " << LLC[i] << endl;
+        LLC[i] = max;
+        sumSqrt = sumSqrt + max * max;
+
     }
 
+    // normalization
     ostringstream s;
-    /****  归一化  *****/
-    sumSqrtMax = sqrt(sumSqrtMax);
-    for(int i=0; i<ncb; i++)
+    s << (LLC[0] / sumSqrt);
+    sumSqrt = sqrt(sumSqrt);
+    for(int i=1; i<ncb; i++)
     {
-        LLC[i] = LLC[i] / sumSqrtMax;
-        s<<LLC[i];
-        //s<<setprecision(4)<<LLC[i];
-        if(i<ncb-1)
-        {
-            s<<",";
-        }
-        //string llcstr(s.c_str());
+        s << ",";
+        s << (LLC[i] / sumSqrt);
     }
     return s.str();
 }

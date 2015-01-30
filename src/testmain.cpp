@@ -45,6 +45,8 @@ int main(int argc, char * argv[])
     string llcstr = kf.llcCompute(const_cast<float*>(desc_old), codebook, 500, size);
 
     cout << "time old:" << float(clock() -start_old) << endl;
+    cout << llc_new << endl;
+    cout << llcstr << endl;
     delete codebook;
     // ----------------------------------------------------
 
