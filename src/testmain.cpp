@@ -34,20 +34,38 @@ int main(int argc, char * argv[])
 
     // float* desc_new=ic.dsiftDescripter(src_new);
     string llc_new = ic.llcDescripter(src_new, codebook, 500, 5);
-    cout << "time new:" << float(clock() -start_new) << endl;
+    cout << llc_new << endl;
+    cout << "time new:" << float(clock() -start_new)/CLOCKS_PER_SEC << endl;
+    start_new = clock();
+
+    // float* desc_new=ic.dsiftDescripter(src_new);
+    string llc_test = ic.llcTest(src_new, codebook, 500, 5);
+    cout << llc_test<<endl;
+    cout << "time test:" << float(clock() -start_new)/CLOCKS_PER_SEC << endl;
 
 
     start_old = clock();
     VlDsiftFilter* ft_old = kf.GetDsift(src_old, size, binSize);
     float * desc_old = new float[size];
     desc_old = bf.normalizedSift(ft_old->descrs, size);
+    cout << "time old:" << float(clock() -start_old)/CLOCKS_PER_SEC << endl;
     // compute the final feature
     string llcstr = kf.llcCompute(const_cast<float*>(desc_old), codebook, 500, size);
 
-    cout << "time old:" << float(clock() -start_old) << endl;
-    cout << llc_new << endl;
-    cout << llcstr << endl;
+    cout << "time old:" << float(clock() -start_old)/CLOCKS_PER_SEC << endl;
+    // cout << llc_new << endl;
+    // cout << llcstr << endl;
     delete codebook;
+
+
+    // Eigen tests
+    // MatrixXd m(2,2);
+    // m(0,0) = 3;
+    // m(1,0) = 2.5;
+    // m(0,1) = -1;
+    // m(1,1) = m(1,0) + m(0,1);
+    // std::cout << m << std::endl;
+
     // ----------------------------------------------------
 
     // for(int i=0 ;i < 100;i++)

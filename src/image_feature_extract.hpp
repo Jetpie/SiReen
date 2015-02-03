@@ -7,14 +7,19 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <map>
-
-#include <opencv2/opencv.hpp>
 #include <string.h>
+#include <queue>
+// opencv header
+#include <opencv2/opencv.hpp>
 #include <ctype.h>
 
+// Eigen Linear Algebra
+//#include <Eigen/Core>
+#include <Eigen/Dense>
 
 using namespace cv;
 using namespace std;
+using namespace Eigen;
 
 extern "C" {
 #include <vl/generic.h>
@@ -53,6 +58,7 @@ public:
 
     float* dsiftDescripter(Mat srcImage);
     string llcDescripter(Mat srcImage, float* codebook, int ncb, int k);
+    string llcTest(Mat srcImage, float* codebook, int ncv, int k);
 
 
 };
