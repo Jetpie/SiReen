@@ -81,40 +81,37 @@ ImageCoder::setParams(int stdWidth, int stdHeight, int step, int binSize)
 
 
 /*
- * decode dense-sift descripter
- * @param srcImg opencv IplImage
- * @param size
- * @param binSize
+ * decode dense-sift descripters
+ *
+ * @param srcImage opencv Mat image
  * @return float*
  */
 float*
 ImageCoder::dsiftDescripter(Mat srcImage)
 {
     // check if source image is graylevel
-    Mat grayImage;
     if (srcImage.channels() != 1)
-        cvtColor(srcImage,grayImage,CV_BGR2GRAY);
-    else
-        grayImage = srcImage;
+        cvtColor(srcImage,srcImage,CV_BGR2GRAY);
 
     // resize image
-    Mat stdImage;
-    resize(grayImage, stdImage, Size(this->stdWidth,this->stdHeight),
-           0, 0, INTER_LINEAR);
+    if(!(srcImage.cols==this->stdWidth
+         && srcImage.rows==this->stdHeight))
+        resize(srcImage, srcImage, Size(this->stdWidth,this->stdHeight),
+               0, 0, INTER_LINEAR);
 
     // validate
-    if(!stdImage.data)
-        return 0;
+    if(!srcImage.data)
+        return NULL;
 
     // get valid input for dsift process
-    vl_sift_pix *imData = new vl_sift_pix[stdImage.rows*stdImage.cols];
+    vl_sift_pix *imData = new vl_sift_pix[srcImage.rows*srcImage.cols];
     uchar * rowPtr;
-    for (int i=0; i<stdImage.rows; i++)
+    for (int i=0; i<srcImage.rows; i++)
     {
-        rowPtr = stdImage.ptr<uchar>(i);
-        for (int j=0; j<stdImage.cols; j++)
+        rowPtr = srcImage.ptr<uchar>(i);
+        for (int j=0; j<srcImage.cols; j++)
         {
-            imData[i*stdImage.cols+j] = rowPtr[j];
+            imData[i*srcImage.cols+j] = rowPtr[j];
         }
     }
 
@@ -130,10 +127,12 @@ ImageCoder::dsiftDescripter(Mat srcImage)
 }
 
 string
-ImageCoder::llcTest(Mat srcImage, float *codebook,const int ncb, int k)
+ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
 {
     // compute dsift feature
     float* dsiftDescr = this->dsiftDescripter(srcImage);
+    if(!dsiftDescr)
+        throw runtime_error("image not loaded or resized properly");
 
     // get sift descripter size and number of keypoints
     int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
@@ -192,12 +191,13 @@ ImageCoder::llcTest(Mat srcImage, float *codebook,const int ncb, int k)
         // compute covariance
         covariance = U.transpose()*U;
         cHat = (covariance + I*covariance.trace())
-            .ldlt().solve(VectorXf::Ones(k));
+            .fullPivLu().solve(VectorXf::Ones(k));
 
         cHat = cHat / cHat.sum();
         for(int j = 0 ; j < k ; j++)
             caches(i,knnIdx(i,j)) = cHat(j);
     }
+
     // Step 3 - get the llc descripter and normalize
     // get max coofficient for each column
     VectorXf llc = caches.colwise().maxCoeff();
@@ -213,104 +213,8 @@ ImageCoder::llcTest(Mat srcImage, float *codebook,const int ncb, int k)
         s << ",";
         s << llc(i);
     }
-    return s.str();
-}
-
-
-string
-ImageCoder::llcDescripter(Mat srcImage, float *codebook, int ncb, int k)
-{
-    // compute dsift feature
-
-    float* dsiftDescr = this->dsiftDescripter(srcImage);
-
-    // get sift descripter size and number of keypoint
-    int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
-    int nKeypoints = vl_dsift_get_keypoint_num(dsiftFilter);
-
-    // initialize dsift descripters and codebook opencv matrix
-    Mat dsiftMat = cv::Mat(nKeypoints, descrSize, CV_32FC1, dsiftDescr);
-    Mat cbMat = cv::Mat(ncb , descrSize, CV_32FC1, codebook);
-
-    /*** Step 1 - compute eucliean distance and sort ***/
-
-    // dd - dsift descripter, cb - codebook
-    Mat ddnorm2,cbnorm2;
-    cv::reduce(dsiftMat.mul(dsiftMat), ddnorm2, 1, CV_REDUCE_SUM);
-    cv::reduce(cbMat.mul(cbMat), cbnorm2, 1, CV_REDUCE_SUM);
-
-    Mat sortedIdx;
-    cv::sortIdx(
-        // euclidean: u^2 + v^2 + 2uv
-        repeat(ddnorm2,1,ncb) +
-        repeat(cbnorm2.t(),nKeypoints,1) -
-        2 * dsiftMat * cbMat.t(),
-        // output mat
-        sortedIdx,
-        CV_SORT_EVERY_ROW | CV_SORT_ASCENDING
-        );
-
     // release memory
-    ddnorm2.release(),cbnorm2.release();
-
-    /*** Step 2 - get knn from codebook***/
-    float *LLC = new float[ncb];
-    Mat knnIdx = sortedIdx(Rect(0,0,k,nKeypoints));
-    // cout << "knnIdx:" << knnIdx.rows << "," << knnIdx.cols << endl;
-    // cout << knnIdx<<endl;
-
-    Mat diagDist = Mat::eye(k,k,CV_32FC1);
-    diagDist = diagDist.mul(1e-4);
-
-    Mat LLCall = Mat::zeros(nKeypoints,ncb,CV_32FC1);
-    Mat U = Mat::zeros(k,descrSize,CV_32FC1);
-    Mat cov;
-    for(int i=0; i<nKeypoints; i++)
-    {
-        for(int ii=0; ii<k; ii++)
-        {
-            U.row(ii) = abs(cbMat.row(knnIdx.at<int>(i,ii) ) - dsiftMat.row(i));
-        }
-        // covariance = U^T * U
-        mulTransposed(U, cov , 0);
-
-        Mat cHat;
-        solve(cov + diagDist.mul(trace(cov)),Mat::ones(k,1,CV_32FC1),cHat);
-
-        divide(cHat,sum(cHat),cHat);
-
-        for(int j=0; j<k; j++)
-            LLCall.at<float>(i,knnIdx.at<int>(i,j)) = cHat.at<float>(j,0);
-    }
-    cov.release(), U.release(), diagDist.release(), sortedIdx.release();
-    transpose(LLCall,LLCall);
-
-    /*** Step3 - get llc descripter***/
-    // prune the maximum value for each LLC
-    float max;
-    float sumSqrt = 0;
-    for(int i=0; i<ncb; i++)
-    {
-        max = LLCall.at<float>(i,0);
-        for(int j=1; j<nKeypoints; j++)
-        {
-            if(LLCall.at<float>(i,j)> max)
-                max = LLCall.at<float>(i,j);
-        }
-        LLC[i] = max;
-        sumSqrt = sumSqrt + max * max;
-
-    }
-
-    // normalization
-    ostringstream s;
-    s << (LLC[0] / sumSqrt);
-    sumSqrt = sqrt(sumSqrt);
-    for(int i=1; i<ncb; i++)
-    {
-        s << ",";
-        s << (LLC[i] / sumSqrt);
-    }
+    delete dsiftDescr;
     return s.str();
 }
 
