@@ -1,27 +1,23 @@
-#pragma once
+#ifndef NENESE_FILE_UTILITY_H_
+#define NENESE_FILE_UTILITY_H_
 
 #include <vector>
 #include <iostream>
 #include <streambuf>
 #include <fstream>
-#include <time.h>
 #include <string.h>
 #include <cerrno>
+#include <sstream>
+
 using namespace std;
 
-class FileUtil
-{
+namespace futil{
 
-
-public:
-
-    FileUtil(void);
-    ~FileUtil(void);
-
-    void write_TXT_file(const char * pFileName, string input);
+    std::string file2str(const char *filename);
     void file2ptr(const char * filename, float* output, char * delim);
     void file2ptr(const char * filename, int* output, char * delim);
-    string file2str(const char *filename);
-    void split_string(const char*str, char c, vector<string>& split_vect);
-
-};
+    void str2file(const char * filename, string input, const char * mode);
+    void spliter(const char*str, char c, vector<string>& split_vect);
+    void split2(const std::string &s, char delim, std::vector<std::string> &elems);
+}
+#endif //NENESE_FILE_UTILITY_H_

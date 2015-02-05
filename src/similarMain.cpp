@@ -202,6 +202,7 @@ int main(int argc, char * argv[]) {
 	// determine 131/137/138
 	string server138 = "gwk138";
 	string server131 = "gwk131";
+	string server59 = "gwk59";
 	// getline最大值
 	unsigned int MAX_LINE_LEN = 512;
     // 取数据库的字段个数
@@ -377,7 +378,15 @@ int main(int argc, char * argv[]) {
 					}
 					imgfile = "/data/138_data/images/gwknew/product_images"
 						+ serverPath;
-				} else {
+				} else if (imgloc[1] == server59){
+					for (std::size_t path_i = 2, max = imgloc.size();
+						 path_i != max; path_i++) {
+						serverPath += "/" + imgloc[path_i];
+					}
+					imgfile = "/data/59_data/product_images"
+						+ serverPath;
+
+				}else {
 					if (imgloc[1] == "gwk137") {
 						for (std::size_t path_i = 2, max = imgloc.size();
 							 path_i != max; path_i++) {

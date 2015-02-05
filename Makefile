@@ -4,6 +4,7 @@ LINK = g++
 
 VLROOT = /home/bingqingqu/user-libs/vlfeat/vlfeat-0.9.19
 VLLIB = /home/bingqingqu/user-lib/vlfeat/vlfeat-0.9.19/bin/glnxa64
+EIGENROOT = /home/bingqingqu/user-libs/eigen-3.2.4
 BIN = bin/
 SRC = src/
 LIB = lib/
@@ -12,9 +13,8 @@ TEMP = res/temp/
 DEFS =
 
 # FLAGS
-CFLAGS = -g -Wall -DOS_LINUX -std=c++0x
-#CFLAGS = -O2 -Wall -DOS_LINUX -std=c++0x
-INCLUDES = -I$(VLROOT)
+CFLAGS = -g -Wall -DOS_LINUX -std=gnu++11 -O3
+INCLUDES = -I$(VLROOT) -I$(EIGENROOT)
 LDFLAGS =  -L$(VLLIB) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_contrib -lvl
 
 
@@ -30,7 +30,7 @@ CREATE_DIR:
 	mkdir -p $(BIN)
 
 # Sources
-SRC_CPP = $(wildcard $(SRC)testmain.cpp $(SRC)similarBasicFunction.cpp $(SRC)similarKeyFunction.cpp $(SRC)image_feature_extract.cpp)
+SRC_CPP = $(wildcard $(SRC)testmain.cpp $(SRC)file_utility.cpp $(SRC)image_feature_extract.cpp)
 
 
 # Objects

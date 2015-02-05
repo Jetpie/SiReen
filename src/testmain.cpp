@@ -6,13 +6,12 @@
 #include <map>
 #include <vector>
 #include <algorithm>
-
+using namespace std;
 int main(int argc, char * argv[])
 {
     string images[] = {"test1.jpg","test2.jpg","test3.jpg","test4.jpg","test5.jpg","test6.jpg"};
     string prefix = "/home/bingqingqu/TAOCP/test_images/";
     string codebookPath =  "/home/bingqingqu/TAOCP/test_images/cb1008001019.txt";
-    FileUtil util;
     ImageCoder ic;
     float *codebook = new float[128 * 500];
 
@@ -20,12 +19,27 @@ int main(int argc, char * argv[])
     s = clock();
     char delim[2] = ",";
     // load codebook
-    util.file2ptr(codebookPath.c_str(), codebook,delim);
+    futil::file2ptr(codebookPath.c_str(), codebook,delim);
     cout << "codebook:" << float(clock() -s) << endl;
 
     s = clock();
-    string result = util.file2str(codebookPath.c_str());
+    string result_str = futil::file2str(codebookPath.c_str());
     cout << "file2str:" << float(clock() -s) << endl;
+
+
+    const std::string words= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
+    // const char words1[]= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
+    std::vector<std::string> result;
+    s = clock();
+    futil::spliter(result_str.c_str(),',',result);
+    cout << "split1:" << float(clock() -s) << endl;
+    cout << result[5]<<endl;
+
+    std::vector<std::string> result2;
+    s = clock();
+    futil::split2(result_str,',',result2);
+    cout << "split2:" << float(clock() -s) << endl;
+    cout << result2[5]<<endl;
     clock_t start;
 
     for(int i=0;i<6;i++)

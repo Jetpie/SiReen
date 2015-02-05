@@ -1,6 +1,5 @@
-#pragma once
-
-
+#ifndef NENESE_IMAGE_FEATURE_EXTRACT_H_
+#define NENESE_IMAGE_FEATURE_EXTRACT_H_
 #include <fstream>
 #include <string.h>
 #include <queue>
@@ -52,3 +51,4 @@ public:
 
 
 };
+#endif
