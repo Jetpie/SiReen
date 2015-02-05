@@ -13,16 +13,16 @@ TEMP = res/temp/
 DEFS =
 
 # FLAGS
-CFLAGS = -g -Wall -DOS_LINUX -std=gnu++11 -O3
+CPPFLAGS = -g -Wall -DOS_LINUX -std=gnu++11 -O3
 INCLUDES = -I$(VLROOT) -I$(EIGENROOT)
-LDFLAGS =  -L$(VLLIB) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_contrib -lvl
+LDFLAGS = -L$(BIN) -L$(LIB) -L$(VLLIB) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_contrib -lvl
 
 
 
 # Target
-PROG = $(BIN)/test
+PROGS = $(BIN)$/LLCcoder
 
-all: CREATE_DIR $(PROG)
+all: CREATE_DIR $(PROGS)
 
 
 # Directory
@@ -30,21 +30,26 @@ CREATE_DIR:
 	mkdir -p $(BIN)
 
 # Sources
-SRC_CPP = $(wildcard $(SRC)testmain.cpp $(SRC)file_utility.cpp $(SRC)image_feature_extract.cpp)
+# SRCS_C1 = $(wildcard $(SRC)*.c)
+SRCS_CPP = $(wildcard $(SRC)main.cpp $(SRC)file_utility.cpp $(SRC)image_feature_extract.cpp)
 
 
 # Objects
-OBJ_CPP = $(patsubst $(SRC)%.cpp, $(TEMP)%.o, $(SRC_CPP))
+# OBJS_C = $(patsubst $(SRC)%.c, $(TEMP)%.o, $(SRCS_C))
+OBJS_CPP = $(patsubst $(SRC)%.cpp, $(TEMP)%.o, $(SRCS_CPP))
 
 
 # Command
-CMD_COMPILE = $(CC) -c $(CFLAGS) $< -o $@ $(INCLUDES) $(DEFS)
+CMD_COMPILE = $(CC) -c $(CPPFLAGS) $< -o $@ $(INCLUDES) $(DEFS)
 CMD_LINK = $(LINK) -o $@ $^ $(LDFLAGS)
 
 # Make targets
-$(PROG): $(OBJ_CPP)
+$(PROGS): $(OBJS_CPP)
 	$(CMD_LINK)
 
+# Make .o files
+# $(TEMP)%.o: $(SRC)%.c
+# 	$(CMD_COMPILE)
 
 $(TEMP)%.o: $(SRC)%.cpp
 	$(CMD_COMPILE)
@@ -52,4 +57,4 @@ $(TEMP)%.o: $(SRC)%.cpp
 # clean
 .PHONY: clean
 clean:
-	$(RM) $(PROG) $(OBJ_CPP)
+	$(RM) $(PROGS) $(OBJS_CPP)
