@@ -1,4 +1,4 @@
-nenese-py
+SiReen
 =========
 
-NEarest-NEighbour-SEarch-PYthon
+Similar Image REcommendation ENgine
