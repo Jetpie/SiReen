@@ -1,5 +1,11 @@
 # Ignore the build dirs
-build
+obj
+
+# Ignore all build parts
+bin/*
+
+# Ignore .tar.gz
+res/images/*
 
 # Ignore Mac specific files
 .DS_Store
