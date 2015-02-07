@@ -5,7 +5,7 @@ obj
 # bin/*
 
 # Ignore .tar.gz
-res/images/*
+#res/images/*
 
 # Ignore Mac specific files
 .DS_Store
