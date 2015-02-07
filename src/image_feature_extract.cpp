@@ -5,6 +5,7 @@
  */
 ImageCoder::ImageCoder(void)
 {
+    this->dsiftFilter = NULL;
     /* default setting */
     this->setParams(128,128,8,16);
 
@@ -19,7 +20,8 @@ ImageCoder::ImageCoder(void)
  */
 ImageCoder::ImageCoder(int stdWidth, int stdHeight, int step, int binSize)
 {
-    setParams(stdWidth,stdHeight,step,binSize);
+    this->dsiftFilter = NULL;
+    this->setParams(stdWidth,stdHeight,step,binSize);
 }
 /*
  * Constructer overloading
@@ -75,7 +77,6 @@ ImageCoder::setParams(int stdWidth, int stdHeight, int step, int binSize)
 
         // switch off gaussian windowing
         vl_dsift_set_flat_window(this->dsiftFilter,true);
-
     }
 }
 

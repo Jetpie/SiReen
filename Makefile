@@ -13,7 +13,7 @@ TEMP = res/temp/
 DEFS =
 
 # FLAGS
-CPPFLAGS = -g -Wall -DOS_LINUX -std=gnu++11 -O3
+CPPFLAGS = -g -Wall -DOS_LINUX -std=c++0x -O3
 INCLUDES = -I$(VLROOT) -I$(EIGENROOT)
 LDFLAGS = -L$(BIN) -L$(LIB) -L$(VLLIB) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_contrib -lvl
 

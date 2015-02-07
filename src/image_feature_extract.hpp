@@ -1,5 +1,5 @@
-#ifndef NENESE_IMAGE_FEATURE_EXTRACT_H_
-#define NENESE_IMAGE_FEATURE_EXTRACT_H_
+#ifndef SIREEN_IMAGE_FEATURE_EXTRACT_H_
+#define SIREEN_IMAGE_FEATURE_EXTRACT_H_
 #include <fstream>
 #include <string.h>
 #include <queue>
@@ -33,7 +33,7 @@ private:
     /* bin size */
     unsigned int binSize;
     /* dsift filter */
-    VlDsiftFilter* dsiftFilter = NULL;
+    VlDsiftFilter* dsiftFilter;// = NULL;
 
     void setParams(int stdWidth, int stdHeight, int step, int binSize);
     float* normalizeSift(float * descripters, int size);
@@ -51,4 +51,4 @@ public:
 
 
 };
-#endif
+#endif //SIREEN_IMAGE_FEATURE_EXTRACT_H_

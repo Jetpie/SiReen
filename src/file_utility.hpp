@@ -1,5 +1,5 @@
-#ifndef NENESE_FILE_UTILITY_H_
-#define NENESE_FILE_UTILITY_H_
+#ifndef SIREEN_FILE_UTILITY_H_
+#define SIREEN_FILE_UTILITY_H_
 
 #include <vector>
 #include <iostream>
@@ -20,4 +20,4 @@ namespace futil{
     void spliter(const char*str, char c, vector<string>& split_vect);
     void split2(const std::string &s, char delim, std::vector<std::string> &elems);
 }
-#endif //NENESE_FILE_UTILITY_H_
+#endif //SIREEN_FILE_UTILITY_H_
