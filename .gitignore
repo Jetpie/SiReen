@@ -2,7 +2,7 @@
 obj
 
 # Ignore all build parts
-bin/*
+# bin/*
 
 # Ignore .tar.gz
 res/images/*
