@@ -1,481 +1,202 @@
+#include "sireen/file_utility.hpp"
+#include "sireen/image_feature_extract.hpp"
 #include <unistd.h>
 #include <ctime>
 #include <iomanip>
 #include <map>
 #include <vector>
 #include <algorithm>
-#include "file_utility.hpp"
-#include "image_feature_extract.hpp"
+using namespace std;
+int main(int argc, char * argv[])
+{
+    string images[] = {"test1.jpg","test2.jpg","test3.jpg","test4.jpg","test5.jpg","test6.jpg"};
+    string prefix = "/home/bingqingqu/TAOCP/Datasets/test/";
+    string codebookPath =  "/home/bingqingqu/TAOCP/Datasets/test/cb1008001019.txt";
+    ImageCoder ic;
+    float *codebook = new float[128 * 500];
 
-/**************************************************/
-#define NUM_SECTOR 200000
-#define CONNECTOR  "_"
-#define CB_PREFIX  "cb"
-/**************************************************/
-
-
-// /*
-//  * split llc record
-//  */
-// vector<string> split(const string& str, string pattern) {
-//     string::size_type pos;
-//     vector<string> result;
-//     string ostr = str + pattern;
-//     unsigned int size = ostr.size();
-
-//     for (unsigned int i = 0; i < size; i++) {
-//         pos = ostr.find(pattern, i);
-//         if (pos < size) {
-//             string s = ostr.substr(i, pos - i);
-//             result.push_back(s);
-//             i = pos + pattern.size() - 1;
-//             break;
-//         }
-//     }
-//     return result;
-// }
-
-/*
- * Load LLC directory and put into map
- */
-map<string, string> loadLLC(string fpath, string cat) {
-    // initialize llc map structure
-    map<string, string> llcmap;
-
-    // count number of lines in llc for loading bar
-    int nLine = 0;
-    ifstream in(fpath);
-    std::string unused;
-    while ( std::getline(in, unused) )
-       ++nLine;
-
-    cout << cat <<  " num of lines: "<<nLine<<endl;
-
-    // LOADING BAR SETTINGS
-    // float nCurrent = 0.0;
-    // float progress = 0.0;
-
-    ifstream catfile(fpath.c_str());
-    if (!catfile.good()) {
-        cout << "broken file:" << cat.c_str() << endl;
-        // validation
-        return llcmap;
-    }
-    string line;
-    getline(catfile, line);
-    int num = 0;
-
-    while (line.size() > 0) {
-        // // loading bar
-        // progress = (++nCurrent)/nLine;
-        // int barWidth = 70;
-        // std::cout << "[";
-        // int pos = barWidth * progress;
-        // for (int i = 0; i < barWidth; ++i) {
-        //     if (i < pos) std::cout << "=";
-        //     else if (i == pos) std::cout << ">";
-        //     else std::cout << " ";
-        // }
-        // std::cout << "] " << int(progress * 100.0) << " % [Loading LLC]\r";
-        // std::cout.flush();
-        // // end
-
-        vector<string> items;
-        futil::spliter(line.c_str(),',',items);
-        if (items.size() < 1) {
-            getline(catfile, line);
-            continue;
-        }
-        string key = cat + CONNECTOR + items[0];
-        map<string, string>::iterator iter = llcmap.find(key);
-        if (iter == llcmap.end()) {
-            int begin = items[0].size() + 1;
-            string val = line.substr(begin, line.size() - begin);
-            llcmap.insert(map<string, string>::value_type(key, val));
-            num++;
-        }
-        line = "";
-        getline(catfile, line);
-
-    }
-    // std::cout << std::endl;
-    return llcmap;
-}
-
-/*
- * Main
- */
-int main(int argc, char * argv[]) {
-
-    /*********************************************
-     *  Step 0 - optget to receive input option
-     *********************************************/
-    // category: category id for handling
-    // sqlDir：sql directory
-    // resultDir: result directory
-    // codebookDir: codebook directory
-    // logDir: log file directory
-    // llcDir: llc directory
-
-    // expand this if category mechanism vary
-    char categoryBuffer[16];
-    categoryBuffer[0] = '0';
-    char sqlDirBuffer[256] = "/data/rsworkspace/imagesearch/res/sqldata/";
-    char resultDirBuffer[256]= "/data/rsworkspace/imagesearch/res/result/";
-    char codebookDirBuffer[256]= "/data/rsworkspace/imagesearch/res/codebook/";
-    char logDirBuffer[256]= "/data/rsworkspace/imagesearch/log/log_f/";
-    char llcDirBuffer[256]= "/data/rsworkspace/imagesearch/res/llc/";
-    /*	CHECK THE INPUT OPTIONS	*/
-    //initialize the arg options
-    int opt;
-    while ((opt = getopt(argc, argv, "c:s:r:d:g:l:")) != -1) {
-        switch (opt) {
-        case 'c':
-            sprintf(categoryBuffer, "%s", optarg);
-            break;
-        case 's':
-            sprintf(sqlDirBuffer, "%s", optarg);
-            break;
-        case 'r':
-            sprintf(resultDirBuffer, "%s", optarg);
-            break;
-        case 'd':
-            sprintf(codebookDirBuffer, "%s", optarg);
-            break;
-        case 'g':
-            sprintf(logDirBuffer, "%s", optarg);
-            break;
-        case 'l':
-            sprintf(llcDirBuffer, "%s", optarg);
-            break;
-        default: /* '?' */
-            fprintf(stderr, "Usage: %s [options]\n", argv[0]);
-            fprintf(stderr, "	-c :Specify category\n");
-            fprintf(stderr, "	-s :PATH to sql directory\n");
-            fprintf(stderr, "	-r :PATH to result directory\n");
-            fprintf(stderr, "	-d :PATH to codebook directory\n");
-            fprintf(stderr, "	-g :PATH to log directory\n");
-            fprintf(stderr, "	-l :PATH to llc directory\n");
-            return -1;
-        }
-    }
-    // at least input
-    if (categoryBuffer[0] == '0') {
-        fprintf(stderr, "Please specify a category for handling!");
-        fprintf(stderr, "Usage: %s [options]\n", argv[0]);
-        fprintf(stderr, "	-c[*] :Specify category\n");
-        fprintf(stderr, "	-s    :PATH to sql file\n");
-        fprintf(stderr, "	-r    :PATH to result directory\n");
-        fprintf(stderr, "	-d    :PATH to codebook directory\n");
-        fprintf(stderr, "	-g    :PATH to log path\n");
-        fprintf(stderr, "	-l    :PATH to llc directory\n");
-        return -1;
-    }
-    /*	CHECK END	*/
-
-    /*--------------------------------------------
-     *	Path
-     --------------------------------------------*/
-    unsigned int resultInd = 0;
-    stringstream sector;
-    sector << resultInd;
-    std::string category(categoryBuffer);
-
-    std::string sqlPath(string(sqlDirBuffer) + category + ".txt");
-    std::string codebookPath(string(codebookDirBuffer) + CB_PREFIX + category + ".txt");
-    std::string llcPath(string(llcDirBuffer) + category + ".llc");
-    std::string resultPath(string(resultDirBuffer) + category +"_"
-                           + sector.str()  + ".txt");
-    std::string logPath(string(logDirBuffer) + category + ".txt");
-    // //print the path
-    // cout << "######################################################" << endl;
-    // cout << "category:"                     << category << endl;
-    // cout << "path to sql file:"          << sqlPath  << endl;
-    // cout << "path to codebook directory:"    << codebookPath << endl;
-    // cout << "path to llc directory:"         << llcPath << endl;
-    // cout << "path to result directory:"  << resultPath << endl;
-    // cout << "path to log directory:"         << logPath << endl;
-    // cout << "######################################################" << endl;
-
-
-    /*--------------------------------------------
-     *	PARAMETERS
-     --------------------------------------------*/
-    // determine 131/137/138/59
-    string server138 = "gwk138";
-    string server131 = "gwk131";
-    string server59 = "gwk59";
-    // getline最大值
-    unsigned int MAX_LINE_LEN = 512;
-    // 取数据库的字段个数
-    unsigned int FIELD_LEN = 7;
-    // 最小的图片路径层级数codebookDir
-    unsigned int MIN_IMGPATH = 3;
-    // code book size
-    int CB_SIZE = 500;
-
-
-    // 特殊分词字符
-    char deliminamer = 0x01;
-
-    /*--------------------------------------------
-     *	VARIABLE READ & WRITE CACHE
-     --------------------------------------------*/
-    // pFile：读取的文件。
-    // rFile：结果存放的文件。
-    FILE * pFile, *rFile;
-    // 每一行数据存储的变量
-    char prodinfo[512];
-    // 字典变量
-    float *codebook = new float[128 * CB_SIZE];
-
-    //counter for reading lines;
-    unsigned int lineCount=0;
-    //counters for processing statues
-    unsigned int successCount = 0;
-    unsigned int brokenCount = 0;
-    unsigned int existCount = 0;
-
-
-    // Initiation
-    ImageCoder icoder;
-
-    // Load log file
-    ofstream log(logPath);
-
-    /*********************************************
-     *  Step 1 - Loading & Check everything
-     *********************************************/
-    // HARD VALIDATIONS - return 1 if not exist
-
-    // 1. sql file validation
-    pFile = fopen(sqlPath.c_str(), "rt");
-    //if no file, error report
-    if ( NULL == pFile)
-    {
-        cerr << "No sql file found!" << endl;
-        log << "No sql file found!" << endl;
-        return -1;
-    }
-
-    // 2. codebook validation
-    if (access(codebookPath.c_str(), 0)){
-        log << "No codebook for category " << category
-            << "!" << endl
-            << "----------------------------------" << endl;
-        cerr << "No codebook for category!" << endl;
-        return -1;
-    }
-
-
+    clock_t s;
+    s = clock();
     char delim[2] = ",";
+    // load codebook
     futil::file2ptr(codebookPath.c_str(), codebook,delim);
-    if (codebook == NULL) {
-        log << "No codebook for category " << category
-            << "!" << endl
-            << "----------------------------------" << endl;
-        cerr << "No codebook for category!" << endl;
-        return -1;
+    cout << "codebook:" << float(clock() -s) << endl;
+
+    s = clock();
+    string result_str = futil::file2str(codebookPath.c_str());
+    cout << "file2str:" << float(clock() -s) << endl;
+
+
+    const std::string words= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
+    // const char words1[]= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
+    std::vector<std::string> result;
+    s = clock();
+    futil::spliter(result_str.c_str(),',',result);
+    cout << "split1:" << float(clock() -s) << endl;
+    cout << result[5]<<endl;
+
+    std::vector<std::string> result2;
+    s = clock();
+    futil::split2(result_str,',',result2);
+    cout << "split2:" << float(clock() -s) << endl;
+    cout << result2[5]<<endl;
+    clock_t start;
+
+    for(int i=0;i<6;i++)
+    {
+        Mat src_new = imread(prefix+images[i],0);
+
+        // test
+        string llc_test;
+        start= clock();
+        try{
+            llc_test = ic.llcDescripter(src_new, codebook, 500, 5);
+        }
+        catch(...){
+            cout << "fail to llc" <<endl;
+        }
+        cout << "time test:" << float(clock() -start)/CLOCKS_PER_SEC << endl;
+        // cout << llc_test<<endl;
     }
-    // 3. write file validation
-    rFile = fopen(resultPath.c_str(), "wt+");
-    //if no file, error report
-    if ( NULL == rFile) {
-        cerr << "result file initialize problem!" << endl;
-        log << "result file initialize problem!" << endl;
-        return -1;
-    }
-
-    // SOFT VALIDATIONS - no action taken
-    // 1.llc map
-    map<string, string> llcmap = loadLLC(llcPath,category);
-    log << "LLC map size: " << llcmap.size() << endl;
-    cout<< "LLC map size: " << llcmap.size() << endl;
-
-    //initialize the category map
-    map<string, int> catMap;
-
-    /*********************************************
-     *  Step 2 - Traverse the SQL file
-     *********************************************/
-    while (fgets(prodinfo, MAX_LINE_LEN, pFile) != NULL) {
-        // line count for each
-        lineCount++;
-        // print info
-        if(lineCount % 10000 == 0){
-            cout	<< "Total: " << setw(10) << left << lineCount   << "\t|"
-                    << "Existed: "<< setw(10) << left << existCount	<< "\t|"
-                    << "Broken: " << setw(10) << left << brokenCount	<< "\t|"
-                    << "Succeed: " << setw(10) << left << successCount
-                    << endl;
-            log		<< "Total: " << setw(10) << left << lineCount   << "\t|"
-                    << "Existed: "<< setw(10) << left << existCount	<< "\t|"
-                    << "Broken: " << setw(10) << left << brokenCount	<< "\t|"
-                    << "Succeed: " << setw(10) << left << successCount
-                    << endl;
-        }
-
-        // read product info
-        prodinfo[strlen(prodinfo) - 1] = '\0';
-        // item length = 6
-        // 0 category id
-        // 1 urlmd5
-        // 2 imgurl
-        // 3 merchant id
-        // 4 product weight
-        // 5 Commission state
-        // 6 product state
-        vector<string> items;
-        futil::spliter(prodinfo, deliminamer, items);
-        // reset prodinfo
-        memset(prodinfo, 0, sizeof(char) * 512);
-
-        // LINE INFO VALIDATION
-        if (items.size() != FIELD_LEN && items[0] != category)
-            continue;
-
-        // string to store llc
-        string llcstr;
-        //check map
-        map<string, string>::iterator iter;
-        string key = items[0] + CONNECTOR + items[1];
-        iter = llcmap.find(key);
-        if (iter != llcmap.end()) {
-            //exist
-            existCount++;
-            //cout<<items[1]<<"already exist!"<<endl;
-            llcstr = iter->second;
-
-        }
-        else{
-
-
-            // init imgloc
-            vector<string> imgloc;
-            // split the image location
-            futil::spliter(items[2].c_str(), '/', imgloc);
-
-            /*********************************************
-             *  Step 3 - handle a single file
-             *********************************************/
-            // path length check > 3
-            if (imgloc.size() > MIN_IMGPATH){
-
-                // image url
-                string imgfile;
-                // temp variable to store final url path
-                string serverPath = "";
-                if (imgloc[1] == server131) {
-                    for (std::size_t path_i = 2, max = imgloc.size();
-                         path_i != max; path_i++) {
-                        serverPath += "/" + imgloc[path_i];
-                    }
-                    imgfile = "/data/131_data/images/gwknew/product_images"
-                        + serverPath;
-                } else if (imgloc[1] == server138) {
-                    for (std::size_t path_i = 2, max = imgloc.size();
-                         path_i != max; path_i++) {
-                        serverPath += "/" + imgloc[path_i];
-                    }
-                    imgfile = "/data/138_data/images/gwknew/product_images"
-                        + serverPath;
-                } else if (imgloc[1] == server59){
-                    for (std::size_t path_i = 2, max = imgloc.size();
-                         path_i != max; path_i++) {
-                        serverPath += "/" + imgloc[path_i];
-                    }
-                    imgfile = "/data/59_data/product_images"
-                        + serverPath;
-
-                }else {
-                    if (imgloc[1] == "gwk137") {
-                        for (std::size_t path_i = 2, max = imgloc.size();
-                             path_i != max; path_i++) {
-                            serverPath += "/" + imgloc[path_i];
-                        }
-                    } else {
-                        for (std::size_t path_i = 1, max = imgloc.size();
-                             path_i != max; path_i++) {
-                            serverPath += "/" + imgloc[path_i];
-                        }
-                    }
-                    imgfile = "/data/137_data/images/gwknew/product_images"
-                        + serverPath;
-                }
-
-                // load image source to Mat format(opencv2.4.9)
-                // using the simple llcDescripter interface from
-                // ImageCoder
-                try
-                {
-                    Mat srcImage = imread(imgfile,0);
-                    llcstr = icoder.llcDescripter(srcImage, codebook, CB_SIZE, 5);
-                }
-                catch(...)
-                {
-                    brokenCount++;
-                    log << "image broken: " << imgfile.c_str() << endl;
-                    continue;
-                }
-
-                // write to llc
-                futil::str2file(const_cast<char*>(llcPath.c_str()),
-                                items[1] + "," + llcstr,"at");
-                // llcmap.insert(map<string, string>::value_type(key, llcstr));
-
-            }
-            else{
-                log <<"image path format error!" <<endl;
-                continue;
-            }
-
-        }
-
-        /*********************************************
-         *  Step 4 -  write result to file
-         *********************************************/
-
-        // correct file
-        if(successCount!=0 && successCount % NUM_SECTOR == 0){
-            // flush stringstream sector
-            sector.str(std::string());
-            sector.clear();
-            fclose(rFile);
-            sector << ++resultInd;
-            resultPath = string(resultDirBuffer) + category +"_"
-                + sector.str() + ".txt";
-            rFile = fopen(resultPath.c_str(), "wt+");
-            //if no file, error report
-            if ( NULL == rFile) {
-                cerr << "result file initialize problem!" << endl;
-                log << "result file initialize problem!" << endl;
-                return -1;
-            }
-
-        }
-        fprintf(rFile, "%s\t%s\t%s\t%s\t%s\t%s\t", items[0].c_str(),
-                items[3].c_str(), items[1].c_str(), items[4].c_str(),
-                items[5].c_str(),items[6].c_str());
-        fprintf(rFile, "%s\n", llcstr.c_str());
-
-        if (ferror(rFile)) {
-            perror("result file error\n");
-            log << "result file error\n" << endl;
-            fclose(rFile);
-        }else {
-            // finally, success count
-            successCount++;
-        }
-
-    }
-
     delete codebook;
-    fclose(pFile);
-    log		<< "Total: " << setw(10) << left << lineCount       << "\t|"
-            << "Existed: "<< setw(10) << left << existCount     << "\t|"
-            << "Broken: " << setw(10) << left << brokenCount	<< "\t|"
-            << "Succeed: " << setw(10) << left << successCount
-            << endl;
-    log << "**********END**********" << endl;
-    log.close();
+
+
+    // // reset size and binSize
+    // int size = 0;
+    // int binSize = 16;
+    // float * desc_old = new float[size];
+    // for(int i=0;i<6;i++)
+    // {
+    //     size =0;
+    //     binSize=16;
+    //     Mat src_new = imread(prefix+images[i],0);
+    //     IplImage *src_old = cvLoadImage((prefix+images[i]).c_str(), 0);
+
+    //     // test
+    //     string llc_test;
+    //     start= clock();
+    //     try{
+    //         llc_test = ic.llcTest(src_new, codebook, 500, 5);
+    //     }
+    //     catch(...){
+    //         cout << "fail to llc" <<endl;
+    //     }
+    //     cout << "time test:" << float(clock() -start)/CLOCKS_PER_SEC << endl;
+    //     cout << llc_test<<endl;
+
+    //     string llc_new;
+    //     // new
+    //     start= clock();
+    //     try{
+    //         llc_new = ic.llcDescripter(src_new, codebook, 500, 5);
+    //     }
+    //     catch(...){
+    //         cout << "fail to llc" <<endl;
+    //     }
+    //     cout << "time new:" << float(clock() -start)/CLOCKS_PER_SEC << endl;
+    //     cout << llc_new << endl;
+
+
+    //     // old
+    //     start= clock();
+    //     VlDsiftFilter* ft_old = kf.GetDsift(src_old, size, binSize);
+    //     desc_old = bf.normalizedSift(ft_old->descrs, size);
+    //     string llcstr = kf.llcCompute(const_cast<float*>(desc_old), codebook, 500, size);
+    //     cout << "time old:" << float(clock() -start)/CLOCKS_PER_SEC << endl;
+    //     cout << llc_new << endl;
+    // }
+    // delete codebook;
+    // delete desc_old;
+
+    // string imgPath = "/home/bingqingqu/TAOCP/test_images/test1.jpg";
+    // string imgPath2 = "/home/bingqingqu/TAOCP/test_images/test2.jpg";
+    // Mat src_new = imread(imgPath,0);
+    // Mat src_new2 = imread(imgPath2,0);
+    // IplImage *src_old = cvLoadImage(imgPath.c_str(), 0);
+    // IplImage *src_old2 = cvLoadImage(imgPath2.c_str(), 0);
+
+    // similarKeyFunction kf;
+    // similarBasicFunction bf;
+    // ImageCoder ic;
+
+    // float *codebook = new float[128 * 500];
+    // // load codebook
+    // bf.read_TXT_file(codebookPath.c_str(), codebook);
+
+    // // reset size and binSize
+    // int size = 0;
+    // int binSize = 16;
+    // // initialize
+    // clock_t start_old,start_new;
+    // start_new = clock();
+
+    // // float* desc_new=ic.dsiftDescripter(src_new);
+    // string llc_new = ic.llcDescripter(src_new, codebook, 500, 5);
+    // cout << llc_new << endl;
+    // cout << "time new:" << float(clock() -start_new)/CLOCKS_PER_SEC << endl;
+    // start_new = clock();
+
+    // // float* desc_new=ic.dsiftDescripter(src_new);
+    // string llc_test = ic.llcTest(src_new, codebook, 500, 5);
+    // cout << llc_test<<endl;
+    // cout << "time test:" << float(clock() -start_new)/CLOCKS_PER_SEC << endl;
+
+
+    // start_old = clock();
+    // VlDsiftFilter* ft_old = kf.GetDsift(src_old, size, binSize);
+    // float * desc_old = new float[size];
+    // desc_old = bf.normalizedSift(ft_old->descrs, size);
+    // cout << "time old:" << float(clock() -start_old)/CLOCKS_PER_SEC << endl;
+    // // compute the final feature
+    // string llcstr = kf.llcCompute(const_cast<float*>(desc_old), codebook, 500, size);
+
+    // cout << "time old:" << float(clock() -start_old)/CLOCKS_PER_SEC << endl;
+    // // cout << llc_new << endl;
+    // // cout << llcstr << endl;
+    // delete codebook;
+
+
+    // Eigen tests
+    // MatrixXd m(2,2);
+    // m(0,0) = 3;
+    // m(1,0) = 2.5;
+    // m(0,1) = -1;
+    // m(1,1) = m(1,0) + m(0,1);
+    // std::cout << m << std::endl;
+
+    // ----------------------------------------------------
+
+    // for(int i=0 ;i < 100;i++)
+    // {
+    //     for(int j=0;j<128;j++)
+    //     {
+    //         cout << desc_old[i*128+j]-desc_new[i*128+j]<< ",";
+    //     }
+    //     cout << endl;
+    // }
+    // delete ft_old;
+
+
+    // // reset size and binSize
+    // size = 0;
+    // binSize = 16;
+    // start_old = clock();
+    // VlDsiftFilter* ft_old2 = kf.GetDsift(src_old2, size, binSize);
+
+    // float * desc_old2 = new float[size];
+    // desc_old2 = bf.normalizedSift(ft_old2->descrs, size);
+    // cout << "time old:" << float(clock() -start_old) << endl;
+    // start_new = clock();
+    // float* desc_new2=ic.dsiftDescripter(src_new2);
+    // cout << "time new:" << float(clock() -start_new) << endl;
+    // for(int i=0 ;i < 100;i++)
+    // {
+    //     for(int j=0;j<128;j++)
+    //     {
+    //         cout << desc_old2[i*128+j]-desc_new2[i*128+j]<< ",";
+    //     }
+    //     cout << endl;
+    // }
+    // delete ft_old2;
+
 }
