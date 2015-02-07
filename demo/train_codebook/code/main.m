@@ -6,16 +6,16 @@ clc;
 % set path
 addpath('01_train/');
 % set path to vlfeat
-VLFEATROOT = 'D:\Downloads\user-libs\vlfeat\vlfeat-0.9.19-bin\vlfeat-0.9.19\';
-path_vlfeat = [VLFEATROOT 'toolbox\vl_setup'];
+VLFEATROOT = '/home/bingqingqu/user-libs/vlfeat/vlfeat-0.9.19/';
+path_vlfeat = [VLFEATROOT 'toolbox/vl_setup'];
 run(path_vlfeat);
 
 %% Step 0 -  Parameters
 params.category = '1008001019';
-params.home_path = 'E:\Emar\llc-codebook\';
-params.image_path = [params.home_path 'data\images\' params.category '\'];
-params.descriptor_path = [params.home_path 'data\descriptors\' params.category '\'];
-params.codebook_path = [params.home_path 'data\codebooks\' params.category '\'];
+params.home_path = '/home/bingqingqu/TAOCP/Github/SiReen/';
+params.image_path = [params.home_path 'res/images/' params.category '/'];
+params.descriptor_path = [params.home_path 'res/descriptors/' params.category '/'];
+params.codebook_path = [params.home_path 'res/codebooks/' params.category '/'];
 % set codebook dimension
 params.N = 500;
 params.sigma = 0;
