@@ -1,6 +1,6 @@
 # ENV
 CC = g++
-#LINK = g++
+# CC = clang --analyze # and comment out the linker last line for sanity
 
 VLROOT = /home/bingqingqu/user-libs/vlfeat/vlfeat-0.9.19
 VLLIB = /home/bingqingqu/user-lib/vlfeat/vlfeat-0.9.19/bin/glnxa64
