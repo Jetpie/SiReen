@@ -15,7 +15,7 @@ SRCEXT = cpp
 SOURCES = $(shell find $(SRC) -type f -name *.$(SRCEXT))
 OBJECTS = $(patsubst $(SRC)%,$(OBJ)%,$(SOURCES:.$(SRCEXT)=.o))
 # FLAGS
-CPPFLAGS = -g -Wall -DOS_LINUX -std=c++0x -O3
+CFLAGS = -g -Wall -DOS_LINUX -std=c++0x -O3
 INCLUDES = -I$(VLROOT) -I$(EIGENROOT) -I$(INC)
 LDFLAGS =  -L$(LIB) -L$(VLLIB) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_contrib -lvl
 
@@ -32,7 +32,7 @@ $(TARGET): $(OBJECTS)
 
 $(OBJ)%.o: $(SRC)%.$(SRCEXT)
 	@mkdir -p $(OBJ)
-	@echo "	$(CC) $(CPPFLAGS) $(INCLUDES) -c -o $@ $<"; $(CC) $(CPPFLAGS) $(INCLUDES) -c -o $@ $<
+	@echo "	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<"; $(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 clean:
 	@echo "	Cleaning..."
