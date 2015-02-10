@@ -37,7 +37,7 @@ ImageCoder::ImageCoder(VlDsiftFilter* filter)
     this->stdHeight = filter->imHeight;
     this->step = filter->stepX;
     this->binSize = filter->geom.binSizeX;
-
+    this->imData = new vl_sift_pix[this->stdWidth*this->stdHeight];
 }
 
 /*
@@ -45,6 +45,7 @@ ImageCoder::ImageCoder(VlDsiftFilter* filter)
  */
 ImageCoder::~ImageCoder(void){
     vl_dsift_delete(this->dsiftFilter);
+    delete this->imData;
 }
 
 void
@@ -54,7 +55,7 @@ ImageCoder::setParams(int stdWidth, int stdHeight, int step, int binSize)
     this->stdHeight = stdHeight;
     this->step = step;
     this->binSize = binSize;
-
+    this->imData = new vl_sift_pix[this->stdWidth*this->stdHeight];
     if(this->dsiftFilter)
     {
 
@@ -105,7 +106,8 @@ ImageCoder::dsiftDescripter(Mat srcImage)
         return NULL;
 
     // get valid input for dsift process
-    vl_sift_pix *imData = new vl_sift_pix[srcImage.rows*srcImage.cols];
+    // memset here to prevent memory leak
+    memset(this->imData, 0, sizeof(vl_sift_pix) * this->stdWidth*this->stdHeight);
     uchar * rowPtr;
     for (int i=0; i<srcImage.rows; i++)
     {
@@ -127,6 +129,13 @@ ImageCoder::dsiftDescripter(Mat srcImage)
                                descrSize*nKeypoints);
 }
 
+/*
+ * compute linear local constraint coding descripter
+ * @param srcImage source image in opencv mat format
+ * @param codebook codebook from sift-kmeans
+ * @param ncb dimension of codebook
+ * @param k get top k nearest codes
+ */
 string
 ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
 {
@@ -226,7 +235,8 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
 float* ImageCoder::normalizeSift(float *Descriptors, int size)
 {
     float *normDesc = new float[size];
-    float temp,temp1;                                           //temp1和temp为存储每一个patch对应的128维向量的均方根
+    //temp1和temp为存储每一个patch对应的128维向量的均方根
+    float temp,temp1;
     int i,j;
 
     for(i=0; i<size/128; i++)

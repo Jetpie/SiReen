@@ -51,6 +51,7 @@ int main(int argc, char * argv[])
         start= clock();
         try{
             llc_test = ic.llcDescripter(src_new, codebook, 500, 5);
+            cout << llc_test<<endl;
         }
         catch(...){
             cout << "fail to llc" <<endl;

@@ -34,7 +34,7 @@ private:
     unsigned int binSize;
     /* dsift filter */
     VlDsiftFilter* dsiftFilter;// = NULL;
-
+    vl_sift_pix* imData;
     void setParams(int stdWidth, int stdHeight, int step, int binSize);
     float* normalizeSift(float * descripters, int size);
 
