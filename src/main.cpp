@@ -1,12 +1,14 @@
-#include "sireen/file_utility.hpp"
-#include "sireen/image_feature_extract.hpp"
 #include <unistd.h>
 #include <ctime>
 #include <iomanip>
 #include <map>
 #include <vector>
 #include <algorithm>
+#include "sireen/file_utility.hpp"
+#include "sireen/image_feature_extract.hpp"
+#include <Eigen/Dense>
 using namespace std;
+using namespace Eigen;
 int main(int argc, char * argv[])
 {
     string images[] = {"test1.jpg","test2.jpg","test3.jpg","test4.jpg","test5.jpg","test6.jpg"};
@@ -15,33 +17,34 @@ int main(int argc, char * argv[])
     ImageCoder ic;
     float *codebook = new float[128 * 500];
 
-    clock_t s;
-    s = clock();
+    // clock_t s;
+    // s = clock();
     char delim[2] = ",";
     // load codebook
     futil::file2ptr(codebookPath.c_str(), codebook,delim);
-    cout << "codebook:" << float(clock() -s) << endl;
+    // cout << "codebook:" << float(clock() -s) << endl;
 
-    s = clock();
-    string result_str = futil::file2str(codebookPath.c_str());
-    cout << "file2str:" << float(clock() -s) << endl;
+    // s = clock();
+    // string result_str = futil::file2str(codebookPath.c_str());
+    // cout << "file2str:" << float(clock() -s) << endl;
 
 
-    const std::string words= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
-    // const char words1[]= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
-    std::vector<std::string> result;
-    s = clock();
-    futil::spliter(result_str.c_str(),',',result);
-    cout << "split1:" << float(clock() -s) << endl;
-    cout << result[5]<<endl;
+    // const std::string words= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
+    // // const char words1[]= "Hello,world,I,love,u,a ,ha,g,a,ha,s,csdsasd,d@@,s!";
+    // std::vector<std::string> result;
+    // s = clock();
+    // futil::spliter(result_str.c_str(),',',result);
+    // cout << "split1:" << float(clock() -s) << endl;
+    // cout << result[5]<<endl;
 
-    std::vector<std::string> result2;
-    s = clock();
-    futil::split2(result_str,',',result2);
-    cout << "split2:" << float(clock() -s) << endl;
-    cout << result2[5]<<endl;
+    // std::vector<std::string> result2;
+    // s = clock();
+    // futil::split2(result_str,',',result2);
+    // cout << "split2:" << float(clock() -s) << endl;
+    // cout << result2[5]<<endl;
     clock_t start;
-
+    FILE * f = fopen("/home/bingqingqu/TAOCP/Datasets/test/result_new.txt","w+");
+    fclose(f);
     for(int i=0;i<6;i++)
     {
         Mat src_new = imread(prefix+images[i],0);
@@ -51,7 +54,9 @@ int main(int argc, char * argv[])
         start= clock();
         try{
             llc_test = ic.llcDescripter(src_new, codebook, 500, 5);
-            cout << llc_test<<endl;
+            // cout << llc_test<<endl;
+            futil::str2file("/home/bingqingqu/TAOCP/Datasets/test/result_new.txt",
+                            llc_test, "a+");
         }
         catch(...){
             cout << "fail to llc" <<endl;
@@ -60,8 +65,11 @@ int main(int argc, char * argv[])
         // cout << llc_test<<endl;
     }
     delete codebook;
-
-
+    // MatrixXi a(2,2);
+    // a << 1,-2,
+    //     -3,4;
+    // a = (a.array() > 0).select(0.2,a);
+    // cout << "(a > 0).all()   = " << a << endl;
     // // reset size and binSize
     // int size = 0;
     // int binSize = 16;

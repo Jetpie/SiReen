@@ -102,7 +102,7 @@ ImageCoder::dsiftDescripter(Mat srcImage)
                0, 0, INTER_LINEAR);
 
     // validate
-    if(!srcImage.data)
+    if(!srcImage.data || srcImage.cols == 0)
         return NULL;
 
     // get valid input for dsift process
@@ -121,12 +121,11 @@ ImageCoder::dsiftDescripter(Mat srcImage)
     // process an image data
     vl_dsift_process(this->dsiftFilter,imData);
 
-    int descrSize = vl_dsift_get_descriptor_size(this->dsiftFilter);
-    int nKeypoints = vl_dsift_get_keypoint_num(this->dsiftFilter);
-
-    // return the normalized sift descripters
-    return this->normalizeSift(this->dsiftFilter->descrs,
-                               descrSize*nKeypoints);
+    // return the (unnormalized) sift descripters
+    // by default, the vlfeat library has normalized the descriptors
+    // our following  normalization eliminates those peaks (big value gradients)
+    // and re-normalize them
+    return this->dsiftFilter->descrs;
 }
 
 /*
@@ -139,17 +138,21 @@ ImageCoder::dsiftDescripter(Mat srcImage)
 string
 ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
 {
-    // compute dsift feature
+
     float* dsiftDescr = this->dsiftDescripter(srcImage);
     if(!dsiftDescr)
         throw runtime_error("image not loaded or resized properly");
-
     // get sift descripter size and number of keypoints
     int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
     int nKeypoints = vl_dsift_get_keypoint_num(dsiftFilter);
 
-    // initialize dsift descripters and codebook opencv matrix
-    Map<MatrixXf> matdsift(dsiftDescr,descrSize,nKeypoints);
+
+    // float* dsiftNorm = this->normalizeSift(dsiftDescr,descrSize*nKeypoints);
+    // Map<MatrixXf> matdsift(dsiftNorm,descrSize,nKeypoints);
+
+    // eliminate peak gradients and normalize
+    // initialize dsift descripters and codebook Eigen matrix
+    MatrixXf matdsift= this->normSift(dsiftDescr,descrSize,nKeypoints,true);
     Map<MatrixXf> matcb(codebook,descrSize,ncb);
 
     // Step 1 - compute eucliean distance and sort
@@ -224,15 +227,16 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
         s << llc(i);
     }
     // release memory
-    delete dsiftDescr;
+    // delete dsiftNorm;
     return s.str();
 }
 
 /*
  * Normalization of dense sift desripters
- *
+ * @param descriptors DsiftFilter->Descr
+ * @param size number of Keypoints * descriptor size
  */
-float* ImageCoder::normalizeSift(float *Descriptors, int size)
+float* ImageCoder::normalizeSift(float *descriptors, int size)
 {
     float *normDesc = new float[size];
     //temp1和temp为存储每一个patch对应的128维向量的均方根
@@ -249,7 +253,7 @@ float* ImageCoder::normalizeSift(float *Descriptors, int size)
             //求均方差
         {
             //printf("%f\n",Descriptors[i*128 + j]);
-            temp  = temp  + Descriptors[i*128 + j] * Descriptors[i*128 + j];
+            temp  = temp  + descriptors[i*128 + j] * descriptors[i*128 + j];
         }
         temp = sqrt(temp);
 
@@ -258,7 +262,7 @@ float* ImageCoder::normalizeSift(float *Descriptors, int size)
         {
             for(j=0; j<128; j++)
             {
-                normDesc[i*128 + j] = Descriptors[i*128 + j]/temp;
+                normDesc[i*128 + j] = descriptors[i*128 + j] / temp;
                 if(normDesc[i*128 + j] > 0.2)
                 {
                     normDesc[i*128 + j] = 0.2;    //消除梯度太大的量，即归一化后大于0.2的量，强制等于0.2
@@ -278,10 +282,32 @@ float* ImageCoder::normalizeSift(float *Descriptors, int size)
         {
             for(j=0; j<128; j++)
             {
-                normDesc[i*128 + j] = Descriptors[i*128 + j];
+                normDesc[i*128 + j] = descriptors[i*128 + j];
             }
         }
     }
 
     return normDesc;
+}
+
+
+/*
+ * Correct normalization for future use
+ * @future
+ */
+Eigen::MatrixXf
+ImageCoder::normSift(float *descriptors, int row, int col, bool normalized)
+{
+    // use Eigen Map to pass float* to MatrixXf
+    Map<MatrixXf> matdsift(descriptors,row,col);
+
+    // if the input descriptors is not normalized
+    // normalize them first
+    if(!normalized)
+        matdsift.colwise().normalize();
+    // suppress those sharp gradients (>0.2 after normalization)
+    matdsift = (matdsift.array() > 0.2).select(0.2,matdsift);
+    matdsift.colwise().normalize();
+
+    return matdsift;
 }

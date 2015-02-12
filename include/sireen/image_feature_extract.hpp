@@ -36,7 +36,7 @@ private:
     VlDsiftFilter* dsiftFilter;// = NULL;
     vl_sift_pix* imData;
     void setParams(int stdWidth, int stdHeight, int step, int binSize);
-    float* normalizeSift(float * descripters, int size);
+    float* normalizeSift(float * descriptors, int size);
 
 
 public:
@@ -48,7 +48,7 @@ public:
 
     float* dsiftDescripter(Mat srcImage);
     string llcDescripter(Mat srcImage, float* codebook, int ncb, int k);
-
+    Eigen::MatrixXf normSift(float * descriptors, int row, int col, bool normalized);
 
 };
 #endif //SIREEN_IMAGE_FEATURE_EXTRACT_H_
