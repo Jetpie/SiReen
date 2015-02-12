@@ -66,8 +66,10 @@ int main(int argc, char * argv[])
     }
     delete codebook;
     // MatrixXi a(2,2);
-    // a << 1,-2,
-    //     -3,4;
+    // a << 1,0,
+    //     -3,0;
+    // a.colwise().normalize();
+    // cout << a << endl;
     // a = (a.array() > 0).select(0.2,a);
     // cout << "(a > 0).all()   = " << a << endl;
     // // reset size and binSize

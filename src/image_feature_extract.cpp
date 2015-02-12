@@ -11,8 +11,6 @@ ImageCoder::ImageCoder(void)
 
     int descrSize = vl_dsift_get_descriptor_size(this->dsiftFilter);
     int nKeypoints = vl_dsift_get_keypoint_num(this->dsiftFilter);
-
-    cout<< descrSize << "," << nKeypoints << endl;
 }
 
 /*
@@ -146,9 +144,8 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
     int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
     int nKeypoints = vl_dsift_get_keypoint_num(dsiftFilter);
 
-
     // float* dsiftNorm = this->normalizeSift(dsiftDescr,descrSize*nKeypoints);
-    // Map<MatrixXf> matdsift(dsiftNorm,descrSize,nKeypoints);
+    // Map<MatrixXf> matdsift2(dsiftNorm,descrSize,nKeypoints);
 
     // eliminate peak gradients and normalize
     // initialize dsift descripters and codebook Eigen matrix
@@ -292,22 +289,51 @@ float* ImageCoder::normalizeSift(float *descriptors, int size)
 
 
 /*
- * Correct normalization for future use
- * @future
+ * Optimized sift feature improvement and normalization
+ * @param descriptors sift descriptors
+ * @param row number of rows
+ * @param col number of column
+ * @param normalized flag for normalized input
  */
 Eigen::MatrixXf
-ImageCoder::normSift(float *descriptors, int row, int col, bool normalized)
+ImageCoder::normSift(float *descriptors, int row, int col, bool normalized=false)
 {
     // use Eigen Map to pass float* to MatrixXf
     Map<MatrixXf> matdsift(descriptors,row,col);
+    // clock_t s = clock();
+    // check flag if the input is already normalized
+    if(normalized)
+    {
+        cout << "begin" << endl;
+        for(int i=0;i<col;i++)
+        {
+            // safely check all values not equals to 0
+            // to prevent float division exception
+            if((matdsift.col(i).array()>0).any())
+            {
+                // suppress the sharp (>0.2) features
+                matdsift.col(i) = (matdsift.col(i).array() > 0.2)
+                    .select(0.2,matdsift.col(i));
+                // final normalization
+                matdsift.col(i).normalize();
+            }
 
-    // if the input descriptors is not normalized
-    // normalize them first
-    if(!normalized)
-        matdsift.colwise().normalize();
-    // suppress those sharp gradients (>0.2 after normalization)
-    matdsift = (matdsift.array() > 0.2).select(0.2,matdsift);
-    matdsift.colwise().normalize();
+        }
+    }
+    else
+    {
+        for(int i=0;i<col;i++)
+        {   // compute root l2 norm
+            float norm = matdsift.col(i).norm();
+            if(norm > 0)
+            {   // normalization and suppression
+                matdsift.col(i) = ((matdsift.col(i).array() / norm)
+                                        > 0.2).select(0.2,matdsift.col(i));
+                // normalization
+                matdsift.col(i).normalize();
+            }
 
+        }
+    }
     return matdsift;
 }
