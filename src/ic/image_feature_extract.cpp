@@ -8,9 +8,6 @@ ImageCoder::ImageCoder(void)
     this->dsiftFilter = NULL;
     /* default setting */
     this->setParams(128,128,8,16);
-
-    int descrSize = vl_dsift_get_descriptor_size(this->dsiftFilter);
-    int nKeypoints = vl_dsift_get_keypoint_num(this->dsiftFilter);
 }
 
 /*
@@ -94,13 +91,13 @@ ImageCoder::dsiftDescripter(Mat srcImage)
         cvtColor(srcImage,srcImage,CV_BGR2GRAY);
 
     // resize image
-    if(!(srcImage.cols==this->stdWidth
-         && srcImage.rows==this->stdHeight))
+    if(srcImage.rows != 0 || !(srcImage.cols==this->stdWidth
+                               && srcImage.rows==this->stdHeight))
         resize(srcImage, srcImage, Size(this->stdWidth,this->stdHeight),
                0, 0, INTER_LINEAR);
 
     // validate
-    if(!srcImage.data || srcImage.cols == 0)
+    if(!srcImage.data)
         return NULL;
 
     // get valid input for dsift process
@@ -304,7 +301,6 @@ ImageCoder::normSift(float *descriptors, int row, int col, bool normalized=false
     // check flag if the input is already normalized
     if(normalized)
     {
-        cout << "begin" << endl;
         for(int i=0;i<col;i++)
         {
             // safely check all values not equals to 0
