@@ -1,3 +1,7 @@
+// File: image_feature_extract.hpp
+// Description: functions for image feature extractions
+// Author: Bingqing Qu
+// License: GPLv3
 #ifndef SIREEN_IMAGE_FEATURE_EXTRACT_H_
 #define SIREEN_IMAGE_FEATURE_EXTRACT_H_
 #include <fstream>

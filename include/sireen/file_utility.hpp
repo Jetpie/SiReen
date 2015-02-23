@@ -1,3 +1,7 @@
+// File: file_utility.hpp
+// Description: utilities for file and string processing
+// Author: Bingqing Qu
+// License: GPLv3
 #ifndef SIREEN_FILE_UTILITY_H_
 #define SIREEN_FILE_UTILITY_H_
 

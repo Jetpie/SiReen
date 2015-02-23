@@ -2,11 +2,12 @@
 # encoding: utf-8
 '''
 nearest_neighbour.py -- a general library to solve k nearest neighbour
-                        searching probblem
+                        searching problem using direct matrix (sparse)
+                        manipulation
 
 @author: bingqing qu
 
-@license: MIT
+@license: GPLv3
 
 @contact: sylar.qu@gmail.com
 
