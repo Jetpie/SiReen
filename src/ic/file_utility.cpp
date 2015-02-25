@@ -1,6 +1,7 @@
 #include "sireen/file_utility.hpp"
 
-namespace futil{
+namespace futil
+{
 
     /**
      * read file to float pointer separated by delim
