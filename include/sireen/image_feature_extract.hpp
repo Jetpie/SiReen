@@ -25,34 +25,43 @@ extern "C" {
 #include <vl/dsift.h>
 };
 
+// Image Coder Class
+// Sample Usage:
+//    ImageCoder icoder;
+//    Mat src_image = cv::imread(path_to_image,0);
+//    std::string result = icoder.LLCDescriptor(src_image);
 class ImageCoder
 {
 
 private:
-    /* stand image frame size */
-    int stdWidth;
-    int stdHeight;
-    /* sampling step  */
-    unsigned int step;
-    /* bin size */
-    unsigned int binSize;
-    /* dsift filter */
-    VlDsiftFilter* dsiftFilter;// = NULL;
-    vl_sift_pix* imData;
-    void setParams(int stdWidth, int stdHeight, int step, int binSize);
-    float* normalizeSift(float * descriptors, int size);
+    // standard resize width
+    int std_width_;
+    // standard resize height
+    int std_height_;
+    // sift sampleing step size
+    unsigned int step_;
+    // sift bin size
+    unsigned int bin_size_;
+    // dsift filter
+    VlDsiftFilter* dsift_filter_;
+    // image data buffer
+    // the buffer always contains current image pixel values
+    vl_sift_pix* image_data_;
+    void SetParams(int std_width, int std_height, int step, int bin_size);
+    float* NormalizeSift(float * descriptors, int size);
 
 
 public:
-    /* Constructer and Destructer */
     ImageCoder(void);
     ImageCoder(int,int,int,int);
     ImageCoder(VlDsiftFilter*);
     ~ImageCoder(void);
 
-    float* dsiftDescripter(Mat srcImage);
-    string llcDescripter(Mat srcImage, float* codebook, int ncb, int k);
-    Eigen::MatrixXf normSift(float * descriptors, int row, int col, bool normalized);
+    float* DsiftDescriptor(Mat src_image);
+    string LLCDescriptor(Mat src_image, float* codebook,
+                         const int ncb, const int k);
+    Eigen::MatrixXf NormSift(float * descriptors, int row, int col,
+                             const bool normalized);
 
 };
 #endif //SIREEN_IMAGE_FEATURE_EXTRACT_H_

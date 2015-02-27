@@ -47,14 +47,9 @@ demo-all: $(DEMO_TGT)
 # will break as they will not include the dependencies. See
 # also http://wiki.debian.org/ToolChain/DSOLinking
 
-$(DEMO_TGT): $(DEMO_OBJ)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/%: $(SIREENROOT)/demo/sireen_example/src/%.cpp $(DEP_OBJ) $(dirs)
 	@echo "	Linking..."
-	$(CC) $^ -o $(DEMO_TGT) $(DEMO_LDFLAGS)
-
-$(OBJDIR)/%.o: $(SIREENROOT)/demo/sireen_example/src/%.cpp
-	@mkdir -p $(OBJDIR)
-	$(call C,CC) $(DEMO_CFLAGS) -c -o $@ $<
+	$(CC) $(DEMO_CFLAGS) $< $(DEP_OBJ) $(DEMO_LDFLAGS) -o $(DEMO_TGT)
 
 
 demo-clean:

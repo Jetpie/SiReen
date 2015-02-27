@@ -8,7 +8,7 @@ namespace futil
      *
      *
      */
-    void file2ptr(const char * filename, float* output, char * delim)
+    void FileToPtr(const char * filename, float* output, char * delim)
     {
         FILE * f = fopen(filename,"rt");
         if (f == NULL)
@@ -33,7 +33,7 @@ namespace futil
      *
      *
      */
-    void file2ptr(const char * filename, int* output, char * delim)
+    void FileToPtr(const char * filename, int* output, char * delim)
     {
         FILE * f = fopen(filename,"rt");
         if (f == NULL)
@@ -58,7 +58,7 @@ namespace futil
      * probably this is the most elegent way to read file into string
      *
      */
-    std::string file2str(const char * filename)
+    std::string FileToStr(const char * filename)
     {
         std::ifstream in(filename, std::ios::in | std::ios::binary);
         if (in)
@@ -74,7 +74,7 @@ namespace futil
         throw(errno);
     }
 
-    void str2file(const char * filename, string input, const char * mode)
+    void StrToFile(const char * filename, string input, const char * mode)
     {
         FILE * f = fopen(filename,mode);
 
@@ -96,12 +96,12 @@ namespace futil
     }
 
 
-    void spliter(const char*str, char c, vector<string>& result)
+    void Spliter(const char* str, const char delim, vector<string>& result)
     {
         int begin = 0;
         int end   = 0;
 
-        if(!strchr(str, c))
+        if(!strchr(str, delim))
         {
             cout<<"error"<<endl;
             result.push_back(str);
@@ -110,7 +110,7 @@ namespace futil
 
         for(int i = 0; str[i] != '\0'; i++)
         {
-            if(str[i] == c)
+            if(str[i] == delim)
             {
                 end = i;
                 string tmp(&str[begin], end-begin);
@@ -126,7 +126,7 @@ namespace futil
             result.push_back(tmp);
         }
     }
-    void split2(const std::string &s, char delim, std::vector<std::string> &elems)
+    void Split2(const std::string &s, const char delim, std::vector<std::string> &elems)
     {
         std::stringstream ss(s);
         std::string item;

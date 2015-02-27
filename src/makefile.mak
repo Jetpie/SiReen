@@ -43,10 +43,14 @@ OBJDIR = $(SIREENROOT)/obj/$(ARCH)
 #                                                                Build
 # --------------------------------------------------------------------
 DEP_SRC:= $(wildcard $(SIREENROOT)/src/ic/*.cpp)
+DEP_OBJ:= $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o,$(notdir $(DEP_SRC) )))
 BIN_SRC:= $(wildcard $(SIREENROOT)/src/tests/*.cpp)
-BIN_OBJ:= $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o,$(notdir $(DEP_SRC) $(BIN_SRC))))
 BIN_TGT:= $(addprefix $(BINDIR)/, $(patsubst %.cpp,%,$(notdir $(BIN_SRC))))
-.PHONY: bin-all, bin-info, bin-clean
+
+# generate the all-dir target
+$(eval $(call gendir, dirs, $(BINDIR) $(OBJDIR) ))
+
+.PHONY: bin-all, bin-info, bin-clean, dirs
 bin-all: $(BIN_TGT)
 
 # BIN_LDFLAGS includes the libraries to link to and must be
@@ -55,17 +59,12 @@ bin-all: $(BIN_TGT)
 # will break as they will not include the dependencies. See
 # also http://wiki.debian.org/ToolChain/DSOLinking
 
-$(BIN_TGT): $(BIN_OBJ)
-	@mkdir -p $(BINDIR)
+$(BINDIR)/%: $(SIREENROOT)/src/tests/%.cpp $(DEP_OBJ) $(dirs)
 	@echo "	Linking..."
-	$(CC) $^ -o $(BIN_TGT) $(BIN_LDFLAGS)
+	$(CC) $(BIN_CFLAGS) $< $(DEP_OBJ) $(BIN_LDFLAGS) -o $@
 
-$(OBJDIR)/%.o: $(SIREENROOT)/src/tests/%.cpp
-	@mkdir -p $(OBJDIR)
-	$(call C,CC) $(BIN_CFLAGS) -c -o $@ $<
 
-$(OBJDIR)/%.o: $(SIREENROOT)/src/ic/%.cpp
-	@mkdir -p $(OBJDIR)
+$(OBJDIR)/%.o: $(SIREENROOT)/src/ic/%.cpp $(dirs)
 	$(call C,CC) $(BIN_CFLAGS) -c -o $@ $<
 
 # only cleaning generated targets here

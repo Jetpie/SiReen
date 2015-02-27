@@ -17,11 +17,11 @@ using namespace std;
 
 namespace futil{
 
-    std::string file2str(const char *filename);
-    void file2ptr(const char * filename, float* output, char * delim);
-    void file2ptr(const char * filename, int* output, char * delim);
-    void str2file(const char * filename, string input, const char * mode);
-    void spliter(const char*str, char c, vector<string>& split_vect);
-    void split2(const std::string &s, char delim, std::vector<std::string> &elems);
+    std::string FileToStr(const char *filename);
+    void FileToPtr(const char * filename, float* output, char * delim);
+    void FileToPtr(const char * filename, int* output, char * delim);
+    void StrToFile(const char * filename, string input, const char * mode);
+    void Spliter(const char*str, const char delim, vector<string>& result);
+    void Split2(const std::string &s, const char delim, std::vector<std::string> &elems);
 }
 #endif //SIREEN_FILE_UTILITY_H_

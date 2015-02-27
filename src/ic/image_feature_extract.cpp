@@ -1,173 +1,178 @@
+// image feature extraction source code
+// implentations of image coding class and methods
 #include "sireen/image_feature_extract.hpp"
-
-/*
- * Default Constructer
+/**
+ * Default constuctor
  */
 ImageCoder::ImageCoder(void)
 {
-    this->dsiftFilter = NULL;
+    this->dsift_filter_ = NULL;
     /* default setting */
-    this->setParams(128,128,8,16);
+    this->SetParams(128,128,8,16);
 }
-
-/*
+/**
  * Constructer overloading
  */
-ImageCoder::ImageCoder(int stdWidth, int stdHeight, int step, int binSize)
+ImageCoder::ImageCoder(int std_width, int std_height, int step, int bin_size)
 {
-    this->dsiftFilter = NULL;
-    this->setParams(stdWidth,stdHeight,step,binSize);
+    this->dsift_filter_ = NULL;
+    this->SetParams(std_width,std_height,step,bin_size);
 }
-/*
+/**
  * Constructer overloading
  */
 ImageCoder::ImageCoder(VlDsiftFilter* filter)
 {
-    this->dsiftFilter = filter;
+    this->dsift_filter_ = filter;
     // switch off gaussian windowing
-    vl_dsift_set_flat_window(dsiftFilter,true);
+    vl_dsift_set_flat_window(dsift_filter_,true);
 
     // assume that x part equals to y part
-    this->stdWidth = filter->imWidth;
-    this->stdHeight = filter->imHeight;
-    this->step = filter->stepX;
-    this->binSize = filter->geom.binSizeX;
-    this->imData = new vl_sift_pix[this->stdWidth*this->stdHeight];
+    this->std_width_ = filter->imWidth;
+    this->std_height_ = filter->imHeight;
+    this->step_ = filter->stepX;
+    this->bin_size_ = filter->geom.binSizeX;
+    this->image_data_ = new vl_sift_pix[this->std_width_*this->std_height_];
 }
-
-/*
- * Default Destructor
+/**
+ * Destructor
  */
 ImageCoder::~ImageCoder(void){
-    vl_dsift_delete(this->dsiftFilter);
-    delete this->imData;
+    vl_dsift_delete(this->dsift_filter_);
+    delete this->image_data_;
 }
 
+/**
+ * set dsiftfilter parameters of vlfeat library
+ */
 void
-ImageCoder::setParams(int stdWidth, int stdHeight, int step, int binSize)
+ImageCoder::SetParams(int std_width, int std_height, int step, int bin_size)
 {
-    this->stdWidth = stdWidth;
-    this->stdHeight = stdHeight;
-    this->step = step;
-    this->binSize = binSize;
-    this->imData = new vl_sift_pix[this->stdWidth*this->stdHeight];
-    if(this->dsiftFilter)
+    this->std_width_ = std_width;
+    this->std_height_ = std_height;
+    this->step_ = step;
+    this->bin_size_ = bin_size;
+    this->image_data_ = new vl_sift_pix[this->std_width_*this->std_height_];
+    if(this->dsift_filter_)
     {
 
         cout<< "set filter from EXIST"<<endl;
-        this->dsiftFilter->imWidth = stdWidth;
-        this->dsiftFilter->imHeight = stdHeight;
+        this->dsift_filter_->imWidth = std_width_;
+        this->dsift_filter_->imHeight = std_height_;
         VlDsiftDescriptorGeometry geom =
-            *vl_dsift_get_geometry(this->dsiftFilter);
-        geom.binSizeX = binSize ;
-        geom.binSizeY = binSize ;
-        vl_dsift_set_geometry(this->dsiftFilter, &geom);
-        vl_dsift_set_steps(this->dsiftFilter, step, step);
+            *vl_dsift_get_geometry(this->dsift_filter_);
+        geom.binSizeX = bin_size ;
+        geom.binSizeY = bin_size ;
+        vl_dsift_set_geometry(this->dsift_filter_, &geom);
+        vl_dsift_set_steps(this->dsift_filter_, step, step);
     }
     else
     {
         cout<< "set filter from NULL"<<endl;
 
-        this->dsiftFilter =
-            vl_dsift_new_basic(stdWidth, stdHeight, step, binSize);
+        this->dsift_filter_ =
+            vl_dsift_new_basic(std_width, std_height, step, bin_size);
 
         // switch off gaussian windowing
-        vl_dsift_set_flat_window(this->dsiftFilter,true);
+        vl_dsift_set_flat_window(this->dsift_filter_,true);
     }
 }
 
 
-/*
- * decode dense-sift descripters
+/**
+ * encode dense-sift descriptors
  *
- * @param srcImage opencv Mat image
- * @return float*
+ * @param src_image opencv Mat image
+ * @return the dense sift float-point descriptors
  */
 float*
-ImageCoder::dsiftDescripter(Mat srcImage)
+ImageCoder::DsiftDescriptor(Mat src_image)
 {
     // check if source image is graylevel
-    if (srcImage.channels() != 1)
-        cvtColor(srcImage,srcImage,CV_BGR2GRAY);
+    if (src_image.channels() != 1)
+        cvtColor(src_image,src_image,CV_BGR2GRAY);
 
     // resize image
-    if(srcImage.rows != 0 || !(srcImage.cols==this->stdWidth
-                               && srcImage.rows==this->stdHeight))
-        resize(srcImage, srcImage, Size(this->stdWidth,this->stdHeight),
+    if(src_image.rows != 0 || !(src_image.cols==this->std_width_
+                               && src_image.rows==this->std_height_))
+        resize(src_image, src_image, Size(this->std_width_,this->std_height_),
                0, 0, INTER_LINEAR);
 
     // validate
-    if(!srcImage.data)
+    if(!src_image.data)
         return NULL;
 
     // get valid input for dsift process
     // memset here to prevent memory leak
-    memset(this->imData, 0, sizeof(vl_sift_pix) * this->stdWidth*this->stdHeight);
-    uchar * rowPtr;
-    for (int i=0; i<srcImage.rows; i++)
+    memset(this->image_data_, 0, sizeof(vl_sift_pix)
+           * this->std_width_*this->std_height_);
+    uchar * row_ptr;
+    for (int i=0; i<src_image.rows; i++)
     {
-        rowPtr = srcImage.ptr<uchar>(i);
-        for (int j=0; j<srcImage.cols; j++)
+        row_ptr = src_image.ptr<uchar>(i);
+        for (int j=0; j<src_image.cols; j++)
         {
-            imData[i*srcImage.cols+j] = rowPtr[j];
+            this->image_data_[i*src_image.cols+j] = row_ptr[j];
         }
     }
 
     // process an image data
-    vl_dsift_process(this->dsiftFilter,imData);
+    vl_dsift_process(this->dsift_filter_,this->image_data_);
 
-    // return the (unnormalized) sift descripters
+    // return the (unnormalized) sift descriptors
     // by default, the vlfeat library has normalized the descriptors
     // our following  normalization eliminates those peaks (big value gradients)
     // and re-normalize them
-    return this->dsiftFilter->descrs;
+    return this->dsift_filter_->descrs;
 }
 
-/*
- * compute linear local constraint coding descripter
- * @param srcImage source image in opencv mat format
- * @param codebook codebook from sift-kmeans
- * @param ncb dimension of codebook
- * @param k get top k nearest codes
+/**
+ * compute linear local constraint coding descriptor
+ *
+ * @param src_image source image in opencv mat format
+ * @param codebook  codebook from sift-kmeans
+ * @param ncb       dimension of codebook
+ * @param k         get top k nearest codes
  */
 string
-ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
+ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
+                          const int ncb, const int k)
 {
 
-    float* dsiftDescr = this->dsiftDescripter(srcImage);
-    if(!dsiftDescr)
+    float* dsift_descr = this->DsiftDescriptor(src_image);
+    if(!dsift_descr)
         throw runtime_error("image not loaded or resized properly");
-    // get sift descripter size and number of keypoints
-    int descrSize = vl_dsift_get_descriptor_size(dsiftFilter);
-    int nKeypoints = vl_dsift_get_keypoint_num(dsiftFilter);
+    // get sift descriptor size and number of keypoints
+    int descr_size = vl_dsift_get_descriptor_size(dsift_filter_);
+    int n_keypoints = vl_dsift_get_keypoint_num(dsift_filter_);
 
-    // float* dsiftNorm = this->normalizeSift(dsiftDescr,descrSize*nKeypoints);
-    // Map<MatrixXf> matdsift2(dsiftNorm,descrSize,nKeypoints);
+    // float* dsiftNorm = this->NormalizeSift(dsift_descr,descr_size*n_keypoints);
+    // Map<MatrixXf> mat_dsift2(dsiftNorm,descr_size,n_keypoints);
 
     // eliminate peak gradients and normalize
-    // initialize dsift descripters and codebook Eigen matrix
-    MatrixXf matdsift= this->normSift(dsiftDescr,descrSize,nKeypoints,true);
-    Map<MatrixXf> matcb(codebook,descrSize,ncb);
+    // initialize dsift descriptors and codebook Eigen matrix
+    MatrixXf mat_dsift= this->NormSift(dsift_descr,descr_size,n_keypoints,true);
+    Map<MatrixXf> mat_cb(codebook,descr_size,ncb);
 
     // Step 1 - compute eucliean distance and sort
     // only in the case if all the sift features are not sure to
     // be nomalized to sum square 1, we arrange the distance as following
-    MatrixXi knnIdx(nKeypoints, k);
-    MatrixXf cdist(nKeypoints,ncb);
+    MatrixXi knn_idx(n_keypoints, k);
+    MatrixXf cdist(n_keypoints,ncb);
     // get euclidean distance of pairwise column features
     // use the trick of (u-v)^2 = u^2 + v^2 - 2uv
     // with assumption of Eigen column-wise manipulcation
     // is quite fast
-    cdist = ( (matdsift.transpose() * matcb * -2).colwise()
-              + matdsift.colwise().squaredNorm().transpose()).rowwise()
-              + matcb.colwise().squaredNorm();
+    cdist = ( (mat_dsift.transpose() * mat_cb * -2).colwise()
+              + mat_dsift.colwise().squaredNorm().transpose()).rowwise()
+              + mat_cb.colwise().squaredNorm();
 
-    typedef std::pair<double,int> value_and_index;
-    for (int i = 0; i< nKeypoints; i++)
+    typedef std::pair<double,int> ValueAndIndex;
+    for (int i = 0; i< n_keypoints; i++)
     {
-        std::priority_queue<value_and_index,
-                            std::vector<value_and_index>,
-                            std::greater<value_and_index>
+        std::priority_queue<ValueAndIndex,
+                            std::vector<ValueAndIndex>,
+                            std::greater<ValueAndIndex>
                             > q;
         // use a priority queue to implement the pop top k
         for (int j = 0; j < ncb; j++)
@@ -175,7 +180,7 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
 
         for (int n = 0; n < k; n++ )
         {
-            knnIdx(i,n) = q.top().second;
+            knn_idx(i,n) = q.top().second;
             q.pop();
         }
 
@@ -185,29 +190,35 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
     // put the results into llc cache
 
     // declare temp variables
+    // identity matrix
     MatrixXf I = MatrixXf::Identity(k,k) * (1e-4);
-    MatrixXf caches = MatrixXf::Zero(nKeypoints,ncb);
-    MatrixXf U(descrSize,k);
+    // llc caches
+    MatrixXf caches = MatrixXf::Zero(n_keypoints,ncb);
+    // subtraction between vectors
+    MatrixXf U(descr_size,k);
+    // covariance matrix
     MatrixXf covariance(k,k);
-    VectorXf cHat(k);
-    for(int i=0;i<nKeypoints;i++)
+    // c^hat in the formular
+    VectorXf c_hat(k);
+    for(int i=0;i<n_keypoints;i++)
     {
         for(int j=0;j<k;j++)
-            U.col(j) = (matcb.col(knnIdx(i,j)) - matdsift.col(i))
+            U.col(j) = (mat_cb.col(knn_idx(i,j)) - mat_dsift.col(i))
                 .cwiseAbs();
         // compute covariance
         covariance = U.transpose()*U;
-        cHat = (covariance + I*covariance.trace())
+        c_hat = (covariance + I*covariance.trace())
             .fullPivLu().solve(VectorXf::Ones(k));
 
-        cHat = cHat / cHat.sum();
+        c_hat = c_hat / c_hat.sum();
         for(int j = 0 ; j < k ; j++)
-            caches(i,knnIdx(i,j)) = cHat(j);
+            caches(i,knn_idx(i,j)) = c_hat(j);
     }
 
-    // Step 3 - get the llc descripter and normalize
+    // Step 3 - get the llc descriptor and normalize
     // get max coofficient for each column
     VectorXf llc = caches.colwise().maxCoeff();
+
     // normalization
     llc.normalize();
 
@@ -220,83 +231,23 @@ ImageCoder::llcDescripter(Mat srcImage, float *codebook,const int ncb, int k)
         s << ",";
         s << llc(i);
     }
-    // release memory
-    // delete dsiftNorm;
+
     return s.str();
 }
 
-/*
- * Normalization of dense sift desripters
- * @param descriptors DsiftFilter->Descr
- * @param size number of Keypoints * descriptor size
- */
-float* ImageCoder::normalizeSift(float *descriptors, int size)
-{
-    float *normDesc = new float[size];
-    //temp1和temp为存储每一个patch对应的128维向量的均方根
-    float temp,temp1;
-    int i,j;
-
-    for(i=0; i<size/128; i++)
-        //每128个元素对应一个patch的特征向量
-        //分别对每个特征向量进行归一化
-    {
-        temp = 0;
-        temp1 = 0;
-        for(j=0; j<128; j++)
-            //求均方差
-        {
-            //printf("%f\n",Descriptors[i*128 + j]);
-            temp  = temp  + descriptors[i*128 + j] * descriptors[i*128 + j];
-        }
-        temp = sqrt(temp);
-
-        //对于均方差大于1的向量，做归一化处理
-        if(temp > 1)
-        {
-            for(j=0; j<128; j++)
-            {
-                normDesc[i*128 + j] = descriptors[i*128 + j] / temp;
-                if(normDesc[i*128 + j] > 0.2)
-                {
-                    normDesc[i*128 + j] = 0.2;    //消除梯度太大的量，即归一化后大于0.2的量，强制等于0.2
-                }
-                temp1 = temp1 + normDesc[i*128 + j]*normDesc[i*128 + j];
-            }
-            temp1 = sqrt(temp1);
-            for(j=0; j<128; j++)
-                //第二次归一化
-            {
-                normDesc[i*128 + j] = normDesc[i*128 + j]/temp1;
-            }
-
-        }
-        else
-            //对于均方差小于1的向量，不做归一化处理
-        {
-            for(j=0; j<128; j++)
-            {
-                normDesc[i*128 + j] = descriptors[i*128 + j];
-            }
-        }
-    }
-
-    return normDesc;
-}
-
-
-/*
+/**
  * Optimized sift feature improvement and normalization
  * @param descriptors sift descriptors
- * @param row number of rows
- * @param col number of column
- * @param normalized flag for normalized input
+ * @param row         number of rows
+ * @param col         number of column
+ * @param normalized  flag for normalized input
  */
 Eigen::MatrixXf
-ImageCoder::normSift(float *descriptors, int row, int col, bool normalized=false)
+ImageCoder::NormSift(float *descriptors, int row, int col,
+                     const bool normalized=false)
 {
     // use Eigen Map to pass float* to MatrixXf
-    Map<MatrixXf> matdsift(descriptors,row,col);
+    Map<MatrixXf> mat_dsift(descriptors,row,col);
     // clock_t s = clock();
     // check flag if the input is already normalized
     if(normalized)
@@ -305,13 +256,13 @@ ImageCoder::normSift(float *descriptors, int row, int col, bool normalized=false
         {
             // safely check all values not equals to 0
             // to prevent float division exception
-            if((matdsift.col(i).array()>0).any())
+            if((mat_dsift.col(i).array()>0).any())
             {
                 // suppress the sharp (>0.2) features
-                matdsift.col(i) = (matdsift.col(i).array() > 0.2)
-                    .select(0.2,matdsift.col(i));
+                mat_dsift.col(i) = (mat_dsift.col(i).array() > 0.2)
+                    .select(0.2,mat_dsift.col(i));
                 // final normalization
-                matdsift.col(i).normalize();
+                mat_dsift.col(i).normalize();
             }
 
         }
@@ -320,16 +271,16 @@ ImageCoder::normSift(float *descriptors, int row, int col, bool normalized=false
     {
         for(int i=0;i<col;i++)
         {   // compute root l2 norm
-            float norm = matdsift.col(i).norm();
+            float norm = mat_dsift.col(i).norm();
             if(norm > 0)
             {   // normalization and suppression
-                matdsift.col(i) = ((matdsift.col(i).array() / norm)
-                                        > 0.2).select(0.2,matdsift.col(i));
+                mat_dsift.col(i) = ((mat_dsift.col(i).array() / norm)
+                                        > 0.2).select(0.2,mat_dsift.col(i));
                 // normalization
-                matdsift.col(i).normalize();
+                mat_dsift.col(i).normalize();
             }
 
         }
     }
-    return matdsift;
+    return mat_dsift;
 }
