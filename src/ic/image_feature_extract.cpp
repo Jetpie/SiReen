@@ -1,5 +1,7 @@
 // image feature extraction source code
 // implentations of image coding class and methods
+// Author: Bingqing Qu
+// License: GPLv3
 #include "sireen/image_feature_extract.hpp"
 /**
  * Default constuctor
@@ -53,9 +55,9 @@ ImageCoder::SetParams(int std_width, int std_height, int step, int bin_size)
     this->step_ = step;
     this->bin_size_ = bin_size;
     this->image_data_ = new vl_sift_pix[this->std_width_*this->std_height_];
+    // if dsift filter was initialized
     if(this->dsift_filter_)
     {
-
         cout<< "set filter from EXIST"<<endl;
         this->dsift_filter_->imWidth = std_width_;
         this->dsift_filter_->imHeight = std_height_;

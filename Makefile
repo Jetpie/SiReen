@@ -103,10 +103,6 @@ ifeq "$(COMPILER_VER)" "other"
 $(warning Unsupported compiler detected, use at your own risk!)
 endif
 
-ifeq "$(COMPILER)" "clang"
-$(info Clang does not support OpenMP yet, disabling.)
-endif
-
 # Mac OS X Intel
 ifeq "$(ARCH)" "$(filter $(ARCH),maci maci64)"
 ifeq "$(ARCH)" "maci"

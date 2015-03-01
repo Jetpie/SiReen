@@ -48,7 +48,6 @@ private:
     // the buffer always contains current image pixel values
     vl_sift_pix* image_data_;
     void SetParams(int std_width, int std_height, int step, int bin_size);
-    float* NormalizeSift(float * descriptors, int size);
 
 
 public:

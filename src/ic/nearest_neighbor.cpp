@@ -2,6 +2,6 @@
 
 namespace nnse
 {
-    kdtree::kdtree(){}
-    kdtree::~kdtree(){}
+    KDTree::KDTree(){}
+    KDTree::~KDTree(){}
 }

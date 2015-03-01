@@ -18,27 +18,25 @@ using namespace std;
 
 namespace nnse
 {
-    /*
-     * Define point structure
-     */
-    struct point
+    /// Define point structure
+    struct Point
     {
-        double x,y;
-        point() : x(0.),y(0.)
+        float x,y;
+        Point() : x(0.),y(0.)
         {}
-        point(double u, double v) : x(u),y(v)
+        Point(float u, float v) : x(u),y(v)
         {}
     };
 
-    class kdtree
+    class KDTree
     {
     public:
-        kdtree();
-        ~kdtree();
-        void constructTree(void);
-        void search(void);
+        KDTree();
+        ~KDTree();
+        void ConstructTree(void);
+        void Search(void);
     };
-    class root
+    class Root
     {
 
     };
