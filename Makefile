@@ -100,7 +100,8 @@ endif
 
 $(info Detected compiler: $(COMPILER) $(COMPILER_VER))
 ifeq "$(COMPILER_VER)" "other"
-$(warning Unsupported compiler detected, use at your own risk!)
+$(warning Unsupported compiler detected, extra variable may be required.)
+$(warning gcc or clang is recommended.)
 endif
 
 # Mac OS X Intel

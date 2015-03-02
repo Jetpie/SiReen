@@ -12,6 +12,8 @@
 #include <string.h>
 #include <cerrno>
 #include <sstream>
+#include <dirent.h>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -23,5 +25,6 @@ namespace futil{
     void StrToFile(const char * filename, string input, const char * mode);
     void Spliter(const char*str, const char delim, vector<string>& result);
     void Split2(const std::string &s, const char delim, std::vector<std::string> &elems);
+    void GetFilesInDirectory(std::vector<string> &out, const string &directory);
 }
 #endif //SIREEN_FILE_UTILITY_H_
