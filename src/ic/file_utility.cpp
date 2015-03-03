@@ -4,7 +4,7 @@ namespace futil
 {
 
     /**
-     * read file to float pointer separated by delim
+     * read file to float array separated by delim
      *
      *
      */
@@ -28,9 +28,8 @@ namespace futil
         return;
     }
 
-    /*
-     * read file to int pointer separated by delim
-     *
+    /**
+     * read file to int array separated by delim
      *
      */
     void FileToPtr(const char * filename, int* output, char * delim)
@@ -53,10 +52,11 @@ namespace futil
         return;
     }
 
-    /*
+    /**
      * read file to std::string
      * probably this is the most elegent way to read file into string
-     *
+     * @param filename input file name
+     * @return the string read from file
      */
     std::string FileToStr(const char * filename)
     {
@@ -74,6 +74,12 @@ namespace futil
         throw(errno);
     }
 
+    /**
+     * write string to file
+     * @param filename output file name
+     * @param input    input string
+     * @param mode     write mode(w/r/a)
+     */
     void StrToFile(const char * filename, string input, const char * mode)
     {
         FILE * f = fopen(filename,mode);
@@ -95,8 +101,13 @@ namespace futil
         return;
     }
 
-
-    void Spliter(const char* str, const char delim, vector<string>& result)
+    /**
+     * string spliter by delimiter (use a C-way for implementation)
+     * @param str    input string for spliting
+     * @param delim  delimiter
+     * @param result result vector
+     */
+    void Spliter(const char* str, const char delim, vector<string> &result)
     {
         int begin = 0;
         int end   = 0;
@@ -127,24 +138,30 @@ namespace futil
         }
     }
 
-    void Split2(const std::string &s, const char delim, std::vector<std::string> &elems)
+    /**
+     * string spliter by delimiter (this may be slower than Spliter)
+     * @param str    input string for spliting
+     * @param delim  delimiter
+     * @param result result vector
+     */
+    void Spliter2(const string &s, const char delim, vector<string> &result)
     {
-        std::stringstream ss(s);
-        std::string item;
+        stringstream ss(s);
+        string item;
         while (std::getline(ss, item, delim)) {
-            elems.push_back(item);
+            result.push_back(item);
         }
         return;
     }
 
 
     /**
-     * Returns a list of files in a directory
-     * (except the ones that begin with a dot)
+     * Returns a list of files in a directory (except the ones that
+     * begin with a dot)
      * @param out       output vector
      * @param directory directory path
+     *
      */
-
     void GetFilesInDirectory(std::vector<string> &out, const string &directory)
     {
     #ifdef WINDOWS

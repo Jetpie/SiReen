@@ -55,7 +55,7 @@ int main(int argc, char * argv[]) {
     /*--------------------------------------------
      *	VARIABLE READ & WRITE CACHE
      --------------------------------------------*/
-    FILE * rFile;
+    FILE * outfile;
     float *codebook = new float[128 * CB_SIZE];
 
     //counter for reading lines;
@@ -70,19 +70,19 @@ int main(int argc, char * argv[]) {
      *********************************************/
     // 1. codebook validation
     if (access(codebook_path.c_str(), 0)){
-        cerr << "No codebook for category!" << endl;
+        cerr << "codebook not found!" << endl;
         return -1;
     }
     char delim[2] = ",";
     futil::FileToPtr(codebook_path.c_str(), codebook,delim);
     if (codebook == NULL) {
-        cerr << "No codebook for category!" << endl;
+        cerr << "codebook error!" << endl;
         return -1;
     }
     // 1. write file validation
-    rFile = fopen(result_path.c_str(), "wt+");
+    outfile = fopen(result_path.c_str(), "wt+");
     //if no file, error report
-    if ( NULL == rFile) {
+    if ( NULL == outfile) {
         cerr << "result file initialize problem!" << endl;
         return -1;
     }
@@ -96,12 +96,6 @@ int main(int argc, char * argv[]) {
      *********************************************/
     for(unsigned int n = 0; n < all_images.size(); ++n)
     {
-        // line count for each
-        done++;
-        // print info
-        if(done % 1== 0){
-            cout << "\t" << done << " Processed..." << endl;
-        }
         // load image source to Mat format(opencv2.4.9)
         // using the simple llcDescripter interface from
         // ImageCoder
@@ -118,7 +112,7 @@ int main(int argc, char * argv[]) {
         }
         catch(...)
         {
-            cout << "\tbreak image! --> " << imgfile << endl;
+            cout << "\tbroken image! --> " << imgfile << endl;
             continue;
         }
 
@@ -128,12 +122,18 @@ int main(int argc, char * argv[]) {
          *********************************************/
 
         // correct file
-        fprintf(rFile, "%s\t", imgfile.c_str());
-        fprintf(rFile, "%s\n", llcstr.c_str());
+        fprintf(outfile, "%s\t", imgfile.c_str());
+        fprintf(outfile, "%s\n", llcstr.c_str());
+        // succeed count
+        done++;
+        // print info
+        if(done % 1== 0){
+            cout << "\t" << done << " Processed..." << endl;
+        }
 
     }
-    cout << "\t" << done << " Processed..." << endl;
+    cout << "\t" << done << " Processed...(done)" << endl;
     delete codebook;
-    fclose(rFile);
+    fclose(outfile);
 
 }
