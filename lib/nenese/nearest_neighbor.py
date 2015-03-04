@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-nearest_neighbour.py -- a general library to solve k nearest neighbour
-                        searching problem using direct matrix (sparse)
-                        manipulation
+nearest_neighbour.py -- a general library to solvenearest neighbour
+                        problem
 
-@author: bingqing qu
+@author: bingqingqu
 
 @license: GPLv3
 
@@ -116,7 +115,30 @@ def atleast2d_or_csr(X, dtype=None, order=None, copy=False,
 
 
 class KNearestSearch(object):
-    """ K nearest neighbour search """
+    """ K nearest neighbour search
+    
+    Parameters
+    ----------
+    logger :
+        logger specified
+
+    k : int (default 60)
+        return top k final result
+
+    threshold : dict
+        thresholds for any field
+        e.g. {A:0.5,B:0.3}, results only return valid features with
+        condition A > 0.5 and B > 0.3
+
+    dimension : int (default 500)
+        dimension for features
+
+    from_top_n
+
+    file_struct 
+    
+    
+    """
     def __init__(self, logger = None, k = 60, threshold = None, dimension = 500,
                  use_sparse = False, from_top_n = None, file_struct = None,
                  delimiter = ',', preprocesser = None, selecter = None,
@@ -247,46 +269,6 @@ class KNearestSearch(object):
                 self.logger.info("[%s] Processing [Inactive Items] (Elasped Time %f s)" \
                                 % (self.in_name,(time.time() - start)))
                                 
-        # # process A
-        # start = time.time()
-        # base = 0
-        # if max_chunk_size and n_A > max_chunk_size:
-        #     for i,idx in enumerate(np.array_split(np.where(self.A_flags)[0],
-        #                                           n_A / max_chunk_size)):
-        #         X_flags = np.zeros(self.n_samples,dtype = np.bool)
-        #         X_flags[idx] = True
-        #         self._partial_process(X_flags, base)
-        #         base += idx.size
-        # else:
-        #     self._partial_process(self.A, 0)
-        # self.logger.info("[%s]<Avail> Compute, Search, Write (Elasped Time %f s)" \
-        #                  % (self.in_name,(time.time() - start)))
-        # # stamp base index here
-        # base = n_A
-        # # check if partial processing is actived
-        # if max_chunk_size and n_NA > max_chunk_size:
-
-        #     # process Xs (by chunk)
-
-        #     # chunk 1 to n
-        #     for i,idx in enumerate(np.array_split(np.where(~self.A_flags)[0],
-        #                                           n_NA / max_chunk_size)):
-        #         start = time.time()
-        #         X_flags = np.zeros(self.n_samples,dtype = np.bool)
-        #         X_flags[idx] = True
-        #         self._partial_process(X_flags, base)
-        #         self.logger.info("[%s]<chunk-%d> Compute, Search, Write (Elasped Time %f s)" \
-        #                         % (self.in_name,i+1,(time.time() - start)))
-        #         base += idx.size
-        # else:
-        #     if n_NA > 0:
-        #         start = time.time()
-        #         # handle X
-        #         X_flags = ~self.A_flags
-        #         self._partial_process(X_flags,base)
-        #         self.logger.info("[%s]<Unavail>Compute, Search, Write (Elasped Time %f s)" \
-        #                         % (self.in_name,(time.time() - start)))
-            
     def fit(self, in_file, out_file):
         """fit the input file """
         self.in_file = in_file

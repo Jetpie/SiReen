@@ -11,13 +11,26 @@
 # All rights reserved.
 
 # #USAGE#
-# the makefile builds the typical executable cpp programs on Unix based
+# The makefile builds the typical test executable cpp programs on Unix based
 # installation system distributions with the GNU toolchain. Mac OS X
 # and GNU-Linux are explictily supported. The simple usage command can
 # be:
 #
 # > cd PATH_TO_SIREEN_ROOT
 # > make
+#
+# A sireen_demo cpp executable can be compiled by:
+#
+# > cd PATH_TO_SIREEN_ROOT
+# > make demo
+#
+# To indicate the vlfeat root and Eigen Root
+# > make VLROOT=PATH_TO_SIREEN_ROOT EIGENROOT=PATH_TO_EIGEN_ROOT
+#
+# Other avaibale target
+# > make info
+# > make help
+# > make clean
 
 
 SHELL = /bin/bash
