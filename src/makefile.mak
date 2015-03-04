@@ -77,7 +77,8 @@ bin-clean:
 bin-info:
 	$(call echo-title, Exectuable Binary Compiling Parameters)
 	$(call dump-var,BIN_SRC)
-	$(call dump-var,BIN_OBJ)
+	$(call dump-var,DEP_SRC)
+	$(call dump-var,DEP_OBJ)
 	$(call echo-var,BIN_CFLAGS)
 	$(call echo-var,BIN_LDFLAGS)
 	@echo

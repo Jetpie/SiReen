@@ -115,7 +115,8 @@ def atleast2d_or_csr(X, dtype=None, order=None, copy=False,
 
 
 class KNearestSearch(object):
-    """ K nearest neighbour search
+    """
+    K nearest neighbour search
     
     Parameters
     ----------
