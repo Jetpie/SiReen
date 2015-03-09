@@ -58,8 +58,8 @@ public:
 
     float* DsiftDescriptor(Mat src_image);
     string LLCDescriptor(Mat src_image, float* codebook,
-                         const int ncb, const int k);
-    Eigen::MatrixXf NormSift(float * descriptors, int row, int col,
+                         const size_t ncb, const size_t k);
+    Eigen::MatrixXf NormSift(float * descriptors, size_t row, size_t col,
                              const bool normalized);
 
 };

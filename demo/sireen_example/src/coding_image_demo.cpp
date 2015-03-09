@@ -12,9 +12,9 @@ int main(int argc, char * argv[]) {
     /*********************************************
      *  Step 0 - optget to receive input option
      *********************************************/
-    char result_buf[256]= "res/result/1008001019.txt";
-    char codebook_buf[256]= "res/codebooks/1008001019/cb1008001019.txt";
-    char image_dir_buf[256]= "res/images";
+    char result_buf[256]= "res/llc/msrc_ocid_v2.txt";
+    char codebook_buf[256]= "res/codebooks/msrc_ocid_v2/cbmsrc_ocid_v2.txt";
+    char image_dir_buf[256]= "res/images/msrc_ocid_v2";
     /*	CHECK THE INPUT OPTIONS	*/
     //initialize the arg options
     int opt;
@@ -50,7 +50,7 @@ int main(int argc, char * argv[]) {
     /*--------------------------------------------
      *	PARAMETERS
      --------------------------------------------*/
-    int CB_SIZE = 500;
+    const int CB_SIZE = 500;
 
     /*--------------------------------------------
      *	VARIABLE READ & WRITE CACHE
@@ -94,6 +94,7 @@ int main(int argc, char * argv[]) {
     /*********************************************
      *  Step 2 - Traverse the image directory
      *********************************************/
+    clock_t start = clock();
     for(unsigned int n = 0; n < all_images.size(); ++n)
     {
         // load image source to Mat format(opencv2.4.9)
@@ -127,12 +128,14 @@ int main(int argc, char * argv[]) {
         // succeed count
         done++;
         // print info
-        if(done % 1== 0){
+        if(done % 10== 0){
             cout << "\t" << done << " Processed..." << endl;
         }
 
     }
-    cout << "\t" << done << " Processed...(done)" << endl;
+    cout << "\t" << done << " Processed...(done)"
+         << " <Elasped Time: " << float(clock() -start)/CLOCKS_PER_SEC
+         << "s>"<< endl;
     delete codebook;
     fclose(outfile);
 

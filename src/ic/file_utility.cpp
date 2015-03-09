@@ -5,8 +5,9 @@ namespace futil
 
     /**
      * read file to float array separated by delim
-     *
-     *
+     * @param filename the input file name
+     * @param output   the output float pointer
+     * @param delim    delimiter
      */
     void FileToPtr(const char * filename, float* output, char * delim)
     {
@@ -30,9 +31,11 @@ namespace futil
 
     /**
      * read file to int array separated by delim
-     *
+     * @param filename the input file name
+     * @param output   the output int pointer
+     * @param delim    delimiter
      */
-    void FileToPtr(const char * filename, int* output, char * delim)
+    void FileToPtr(const char * filename, int* output,char * delim)
     {
         FILE * f = fopen(filename,"rt");
         if (f == NULL)
@@ -80,7 +83,7 @@ namespace futil
      * @param input    input string
      * @param mode     write mode(w/r/a)
      */
-    void StrToFile(const char * filename, string input, const char * mode)
+    void StrToFile(const char * filename, const string input, const char * mode)
     {
         FILE * f = fopen(filename,mode);
 
@@ -156,13 +159,13 @@ namespace futil
 
 
     /**
-     * Returns a list of files in a directory (except the ones that
+     * Retreive a list of files in a directory (except the ones that
      * begin with a dot)
      * @param out       output vector
      * @param directory directory path
      *
      */
-    void GetFilesInDirectory(std::vector<string> &out, const string &directory)
+    int GetFilesInDirectory(std::vector<string> &out, const string &directory)
     {
     #ifdef WINDOWS
         HANDLE dir;
@@ -188,12 +191,17 @@ namespace futil
         } while (FindNextFile(dir, &file_data));
 
         FindClose(dir);
+        return 0;
     #else
         DIR *dir;
-        class dirent *ent;
-        class stat st;
+        struct dirent *ent;
+        struct stat st;
 
         dir = opendir(directory.c_str());
+        if(dir == NULL) {
+            cout << "Error(" << errno << ") opening " << dir << endl;
+            return errno;
+        }
         while ((ent = readdir(dir)) != NULL) {
             const string file_name = ent->d_name;
             const string full_file_name = directory + "/" + file_name;
@@ -212,7 +220,7 @@ namespace futil
             out.push_back(full_file_name);
         }
         closedir(dir);
+        return 0;
     #endif
     }
-
 }

@@ -6,12 +6,12 @@ clc;
 % set path
 addpath('01_train/');
 % set path to vlfeat
-VLFEATROOT = '/home/bingqingqu/user-libs/vlfeat/vlfeat-0.9.19/';
+VLFEATROOT = '/home/bingqingqu/user-libs/vlfeat-0.9.19/';
 path_vlfeat = [VLFEATROOT 'toolbox/vl_setup'];
 run(path_vlfeat);
 
 %% Step 0 -  Parameters
-params.category = '1008001019';
+params.category = 'caltech101';
 params.home_path = '/home/bingqingqu/TAOCP/Github/SiReen/';
 params.image_path = [params.home_path 'res/images/' params.category '/'];
 params.descriptor_path = [params.home_path 'res/descriptors/' params.category '/'];

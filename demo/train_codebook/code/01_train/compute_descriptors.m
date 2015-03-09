@@ -55,7 +55,7 @@ function sift_arr = normalize_sift(sift_arr)
 
 % find indices of descriptors to be normalized (those whose norm is larger than 1)
 tmp = sqrt(sum(sift_arr.^2, 2));
-normalize_ind = find(tmp > 1);
+normalize_ind = find(tmp > 0);
 
 sift_arr_norm = sift_arr(normalize_ind,:);
 sift_arr_norm = sift_arr_norm ./ repmat(tmp(normalize_ind,:), [1 size(sift_arr,2)]);
