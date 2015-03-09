@@ -1,7 +1,18 @@
-// image feature extraction source code
-// implentations of image coding class and methods
-// Author: Bingqing Qu
+// Functions for reading, encoding and normalizeing image features
+//
+// @author: Bingqing Qu
+//
+// For implentation details, refer to:
+//
+// Jinjun Wang; Jianchao Yang; Kai Yu; Fengjun Lv; Huang, T.;
+// Yihong Gong, "Locality-constrained Linear Coding for image
+// classification, " Computer Vision and Pattern Recognition (CVPR),
+// 2010 IEEE Conference on , vol., no., pp.3360,3367, 13-18 June 2010
+//
+// Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
+//
 // License: GPLv3
+
 #include "sireen/image_feature_extract.hpp"
 /**
  * Default constuctor

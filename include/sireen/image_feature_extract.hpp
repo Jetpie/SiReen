@@ -1,7 +1,18 @@
-// File: image_feature_extract.hpp
-// Description: functions for image feature extractions
-// Author: Bingqing Qu
+// Functions for reading, encoding and normalizeing image features
+//
+// @author: Bingqing Qu
+//
+// For implentation details, refer to:
+//
+// Jinjun Wang; Jianchao Yang; Kai Yu; Fengjun Lv; Huang, T.;
+// Yihong Gong, "Locality-constrained Linear Coding for image
+// classification, " Computer Vision and Pattern Recognition (CVPR),
+// 2010 IEEE Conference on , vol., no., pp.3360,3367, 13-18 June 2010
+//
+// Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
+//
 // License: GPLv3
+
 #ifndef SIREEN_IMAGE_FEATURE_EXTRACT_H_
 #define SIREEN_IMAGE_FEATURE_EXTRACT_H_
 #include <fstream>
@@ -56,11 +67,9 @@ public:
     ImageCoder(VlDsiftFilter*);
     ~ImageCoder(void);
 
-    float* DsiftDescriptor(Mat src_image);
-    string LLCDescriptor(Mat src_image, float* codebook,
-                         const int ncb, const int k);
-    Eigen::MatrixXf NormSift(float * descriptors, int row, int col,
-                             const bool normalized);
+    float* DsiftDescriptor(Mat);
+    string LLCDescriptor(Mat, float*, const int, const int);
+    Eigen::MatrixXf NormSift(float *, int, int, const bool);
 
 };
 #endif //SIREEN_IMAGE_FEATURE_EXTRACT_H_
