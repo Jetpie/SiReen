@@ -11,7 +11,7 @@
 //
 // Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
 //
-// License: GPLv3
+// @license: See LICENSE at root directory
 
 #include "sireen/image_feature_extract.hpp"
 /**
