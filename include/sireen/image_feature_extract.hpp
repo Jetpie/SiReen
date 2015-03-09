@@ -11,7 +11,7 @@
 //
 // Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
 //
-// License: GPLv3
+// @license: See LICENSE at root directory
 
 #ifndef SIREEN_IMAGE_FEATURE_EXTRACT_H_
 #define SIREEN_IMAGE_FEATURE_EXTRACT_H_
@@ -58,17 +58,63 @@ private:
     // image data buffer
     // the buffer always contains current image pixel values
     vl_sift_pix* image_data_;
-    void SetParams(int std_width, int std_height, int step, int bin_size);
+    /**
+     * set parameters for ImageCoder
+     *
+     * @param std_width  standard image resize frame width
+     * @param std_height standard image resize frame height
+     * @param step       VlDsiftFilter step parameter
+     * @param bin_size   VlDsiftFilter binSize parameter
+     */
+    void SetParams(int, int, int, int);
 
 
 public:
+    /** Default Constructor*/
     ImageCoder(void);
+    /**
+     * Constructor Overloading
+     * @param std_width  standard image resize frame width
+     * @param std_height standard image resize frame height
+     * @param step       VlDsiftFilter step parameter
+     * @param bin_size   VlDsiftFilter binSize parameter
+     */
     ImageCoder(int,int,int,int);
+    /**
+     * Constructor Overloading
+     * @param dsift_filter VlDsiftFilter*
+     */
     ImageCoder(VlDsiftFilter*);
+    /** Destructor */
     ~ImageCoder(void);
-
+    /**
+     * encode dense-sift descriptors
+     *
+     * @param src_image opencv Mat image
+     * @return the dense sift float-point descriptors
+     */
     float* DsiftDescriptor(Mat);
+    /**
+     * compute linear local constraint coding descriptor
+     *
+     * @param src_image source image in opencv mat format
+     * @param codebook  codebook from sift-kmeans
+     * @param ncb       dimension of codebook
+     * @param k         get top k nearest codes
+     *
+     * @return a conversion from llc feature to string
+     */
     string LLCDescriptor(Mat, float*, const int, const int);
+    /**
+     * Optimized sift feature improvement and normalization
+     *
+     * @param descriptors sift descriptors
+     * @param row         number of rows
+     * @param col         number of column
+     * @param normalized  flag for normalized input
+     *
+     * @return MatrixXf normalized dsift descripters in Eigen::MatrixXf form
+     */
     Eigen::MatrixXf NormSift(float *, int, int, const bool);
 
 };

@@ -56,7 +56,12 @@ ImageCoder::~ImageCoder(void){
 }
 
 /**
- * set dsiftfilter parameters of vlfeat library
+ * set parameters for ImageCoder
+ *
+ * @param std_width  standard image resize frame width
+ * @param std_height standard image resize frame height
+ * @param step       VlDsiftFilter step parameter
+ * @param bin_size   VlDsiftFilter binSize parameter
  */
 void
 ImageCoder::SetParams(int std_width, int std_height, int step, int bin_size)
@@ -146,6 +151,8 @@ ImageCoder::DsiftDescriptor(Mat src_image)
  * @param codebook  codebook from sift-kmeans
  * @param ncb       dimension of codebook
  * @param k         get top k nearest codes
+ *
+ * @return a conversion from llc feature to string
  */
 string
 ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
@@ -255,10 +262,13 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
 
 /**
  * Optimized sift feature improvement and normalization
+ *
  * @param descriptors sift descriptors
  * @param row         number of rows
  * @param col         number of column
  * @param normalized  flag for normalized input
+ *
+ * @return MatrixXf normalized dsift descripters in Eigen::MatrixXf form
  */
 Eigen::MatrixXf
 ImageCoder::NormSift(float *descriptors, int row, int col,
