@@ -109,10 +109,10 @@ ImageCoder::DsiftDescriptor(Mat src_image)
     memset(this->image_data_, 0, sizeof(vl_sift_pix)
            * this->std_width_*this->std_height_);
     uchar * row_ptr;
-    for (int i=0; i<src_image.rows; ++i)
+    for (int i=0; i<src_image.rows; i++)
     {
         row_ptr = src_image.ptr<uchar>(i);
-        for (int j=0; j<src_image.cols; ++j)
+        for (int j=0; j<src_image.cols; j++)
         {
             this->image_data_[i*src_image.cols+j] = row_ptr[j];
         }
@@ -138,15 +138,15 @@ ImageCoder::DsiftDescriptor(Mat src_image)
  */
 string
 ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
-                          const size_t ncb, const size_t k)
+                          const int ncb, const int k)
 {
 
     float* dsift_descr = this->DsiftDescriptor(src_image);
     if(!dsift_descr)
         throw runtime_error("image not loaded or resized properly");
     // get sift descriptor size and number of keypoints
-    size_t descr_size = vl_dsift_get_descriptor_size(dsift_filter_);
-    size_t n_keypoints = vl_dsift_get_keypoint_num(dsift_filter_);
+    int descr_size = vl_dsift_get_descriptor_size(dsift_filter_);
+    int n_keypoints = vl_dsift_get_keypoint_num(dsift_filter_);
 
     // eliminate peak gradients and normalize
     // initialize dsift descriptors and codebook Eigen matrix
@@ -170,17 +170,17 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
     // section 3, an approximate fast encoding llc can be achieved by
     // keeping only the significant top k values and set others to 0.
     typedef std::pair<double,int> ValueAndIndex;
-    for (size_t i = 0; i< n_keypoints; ++i)
+    for (int i = 0; i< n_keypoints; i++)
     {
         std::priority_queue<ValueAndIndex,
                             std::vector<ValueAndIndex>,
                             std::greater<ValueAndIndex>
                             > q;
         // use a priority queue to implement the pop top k
-        for (size_t j = 0; j < ncb; ++j)
+        for (int j = 0; j < ncb; j++)
             q.push(std::pair<double, int>(cdist(i,j),j));
 
-        for (size_t n = 0; n < k; ++n )
+        for (int n = 0; n < k; n++ )
         {
             knn_idx(i,n) = q.top().second;
             q.pop();
@@ -207,9 +207,9 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
     // where C_i is the covariance matrix
     VectorXf c_hat(k);
 
-    for(size_t i=0;i<n_keypoints;++i)
+    for(int i=0;i<n_keypoints;i++)
     {
-        for(size_t j=0;j<k;++j)
+        for(int j=0;j<k;j++)
             U.col(j) = (mat_cb.col(knn_idx(i,j)) - mat_dsift.col(i))
                 .cwiseAbs();
         // compute covariance
@@ -218,7 +218,7 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
             .fullPivLu().solve(VectorXf::Ones(k));
 
         c_hat = c_hat / c_hat.sum();
-        for(size_t j = 0 ; j < k ; ++j)
+        for(int j = 0 ; j < k ; j++)
             caches(i,knn_idx(i,j)) = c_hat(j);
     }
 
@@ -233,7 +233,7 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
     // (i.e. bis after floating points are omitted)
     ostringstream s;
     s << llc(0);
-    for(size_t i=1; i<ncb; ++i)
+    for(int i=1; i<ncb; i++)
     {
         s << ",";
         s << llc(i);
@@ -250,7 +250,7 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
  * @param normalized  flag for normalized input
  */
 Eigen::MatrixXf
-ImageCoder::NormSift(float *descriptors, size_t row, size_t col,
+ImageCoder::NormSift(float *descriptors, int row, int col,
                      const bool normalized=false)
 {
     // use Eigen Map to pass float* to MatrixXf
@@ -259,7 +259,7 @@ ImageCoder::NormSift(float *descriptors, size_t row, size_t col,
     // check flag if the input is already normalized
     if(normalized)
     {
-        for(size_t i=0;i<col;++i)
+        for(int i=0;i<col;i++)
         {
             // safely check all values not equals to 0
             // to prevent float division exception
@@ -276,7 +276,7 @@ ImageCoder::NormSift(float *descriptors, size_t row, size_t col,
     }
     else
     {
-        for(size_t i=0;i<col;++i)
+        for(int i=0;i<col;i++)
         {   // compute root l2 norm
             float norm = mat_dsift.col(i).norm();
             if(norm > 0)
