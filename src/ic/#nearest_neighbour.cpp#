@@ -40,7 +40,7 @@ namespace nnse
         this->root_ = InitNode(features, n);
 
         // expand
-        Expand(this->root_);
+        ExpandSubtree(this->root_);
     }
 
     /**

@@ -69,6 +69,9 @@ namespace nnse
     private:
         /** kd-tree root node */
         KDTreeNode* root_;
+        /** kd-tree feature dimension */
+        size_t dimension_;
+
         /**
          * initialization of a subtree
          *
@@ -81,7 +84,7 @@ namespace nnse
          *
          * @param node current kd-tree node
          */
-        void Expand(KDTreeNode*);
+        void ExpandSubtree(KDTreeNode*);
         /**
          * Partition features on the current node. Two parts:
          *
@@ -118,6 +121,11 @@ namespace nnse
          *
          */
         void Build(Feature*, const size_t);
+        /**
+         *
+         * 
+         */
+        void KnnBBF(float* );
 
 
     };
