@@ -262,13 +262,12 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
 
 /**
  * Optimized sift feature improvement and normalization
- *
  * @param descriptors sift descriptors
  * @param row         number of rows
  * @param col         number of column
  * @param normalized  flag for normalized input
  *
- * @return MatrixXf normalized dsift descripters in Eigen::MatrixXf form
+ * @return MatrixXf normalized dsift descripters in Eigen::MatrixXf format
  */
 Eigen::MatrixXf
 ImageCoder::NormSift(float *descriptors, int row, int col,
