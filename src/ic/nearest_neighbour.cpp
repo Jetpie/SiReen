@@ -2,22 +2,21 @@
 
 namespace nnse
 {
-    KDTree::KDTree(size_t dimension):dimension_(dimension){}
-
+    KDTree::KDTree(const size_t dimension): dimension_(dimension){}
     KDTree::~KDTree()
     {
-        Release(this->root_);
+        this->release(this->root_);
     }
     /**
      * Release all the allocated memories
      */
     void
-    KDTree::Release(KDTreeNode* node)
+    KDTree::release(KDTreeNode* node)
     {
         if(!node)
             return;
-        this->Release(node->left);
-        this->Release(node->right);
+        this->release(node->left);
+        this->release(node->right);
         delete node;
     }
     /**
@@ -28,7 +27,7 @@ namespace nnse
      *
      */
     void
-    KDTree::Build(Feature* features, const size_t n)
+    KDTree::build(Feature* features, const size_t n)
     {
         // TODO: add check on input features
         // check input
@@ -37,10 +36,10 @@ namespace nnse
             cerr << "Error: KDTree::Build(): input error!" << endl;
         }
         // init
-        this->root_ = InitNode(features, n);
+        this->root_ = this->init_node(features, n);
 
         // expand
-        Expand(this->root_);
+        this->expand_subtree(this->root_);
     }
 
     /**
@@ -50,7 +49,7 @@ namespace nnse
      * @param n        number of features
      */
     KDTreeNode*
-    KDTree::InitNode(Feature* features, const size_t n)
+    KDTree::init_node(Feature* features, const size_t n)
     {
         // dynamic allocate root node
         KDTreeNode* node = new KDTreeNode;
@@ -69,7 +68,7 @@ namespace nnse
      * @param node current kd-tree node
      */
     void
-    KDTree::Expand(KDTreeNode* node)
+    KDTree::expand_subtree(KDTreeNode* node)
     {
         // check leaf condition for stoping
         if( node->n==1 || node->n ==0)
@@ -78,11 +77,12 @@ namespace nnse
             return;
         }
         // the following parts should be very clear
-        Partition(node);
+        this->partition(node);
+
         if(node->left)
-            Expand(node->left);
+            this->expand_subtree(node->left);
         if(node->right)
-            Expand(node->right);
+            this->expand_subtree(node->right);
     }
 
     /**
@@ -101,7 +101,7 @@ namespace nnse
      *
      */
     void
-    KDTree::Partition(KDTreeNode* node)
+    KDTree::partition(KDTreeNode* node)
     {
         // ***1 DETERMINE THE PIVOT DIMENSION AND FEATURE***
 
@@ -203,8 +203,8 @@ namespace nnse
             return;
         }
         //
-        node->left = InitNode(features, k+1);
-        node->right = InitNode(features+k, n-k+1);
+        node->left = this->init_node(features, k+1);
+        node->right = this->init_node(features+k, n-k+1);
 
     }
 

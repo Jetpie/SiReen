@@ -3,14 +3,8 @@
 using namespace std;
 int main()
 {
-    nnse::KDTree kdtree = new nnse::KDTree;
-    kdtree->Build();
-
-    kdtree->Knn();
-
-
-
-
+    const size_t dim = 500;
+    nnse::KDTree* kdtree = new nnse::KDTree(dim);
 
     cout << "***std::nth_element Test***" << endl;
     float a[] = {7.0,3.0,5.0,4.0,2.0,6.0,1,0};

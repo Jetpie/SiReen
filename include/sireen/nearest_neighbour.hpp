@@ -69,19 +69,22 @@ namespace nnse
     private:
         /** kd-tree root node */
         KDTreeNode* root_;
+        /** kd-tree feature dimension */
+        size_t dimension_;
+
         /**
          * initialization of a subtree
          *
          * @param features an array of features
          * @param n        number of features
          */
-        KDTreeNode* InitNode(Feature *, const size_t);
+        KDTreeNode* init_node(Feature *, const size_t);
         /**
          * expand kd-tree after root node is initialized
          *
          * @param node current kd-tree node
          */
-        void Expand(KDTreeNode*);
+        void expand_subtree(KDTreeNode*);
         /**
          * Partition features on the current node. Two parts:
          *
@@ -97,11 +100,11 @@ namespace nnse
          * @param node the current node
          *
          */
-        void Partition(KDTreeNode*);
+        void partition(KDTreeNode*);
 
     public:
         /** Constructor */
-        KDTree();
+        KDTree(const size_t);
         /** Destructor */
         ~KDTree();
         /**
@@ -109,7 +112,7 @@ namespace nnse
          *
          * @param a tree node
          */
-        void Release(KDTreeNode* );
+        void release(KDTreeNode* );
         /**
          * build the kd-tree structure from input features
          *
@@ -117,7 +120,12 @@ namespace nnse
          * @param n        number of features
          *
          */
-        void Build(Feature*, const size_t);
+        void build(Feature*, const size_t);
+        /**
+         *
+         *
+         */
+        void knn_search_bbf(float* );
 
 
     };
