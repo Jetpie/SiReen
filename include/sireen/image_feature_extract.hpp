@@ -93,7 +93,7 @@ public:
      * @param src_image opencv Mat image
      * @return the dense sift float-point descriptors
      */
-    float* DsiftDescriptor(Mat);
+    float* dsift_descriptor(Mat);
     /**
      * compute linear local constraint coding descriptor
      *
@@ -104,7 +104,7 @@ public:
      *
      * @return a conversion from llc feature to string
      */
-    string LLCDescriptor(Mat, float*, const int, const int);
+    string llc_descriptor(Mat, float*, const int, const int);
     /**
      * Optimized sift feature improvement and normalization
      *
@@ -115,7 +115,7 @@ public:
      *
      * @return MatrixXf normalized dsift descripters in Eigen::MatrixXf form
      */
-    Eigen::MatrixXf NormSift(float *, int, int, const bool);
+    Eigen::MatrixXf norm_sift(float *, int, int, const bool);
 
 };
 #endif //SIREEN_IMAGE_FEATURE_EXTRACT_H_

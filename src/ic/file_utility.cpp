@@ -9,7 +9,8 @@ namespace futil
      * @param output   the output float pointer
      * @param delim    delimiter
      */
-    void FileToPtr(const char * filename, float* output, char * delim)
+    void
+    file_to_pointer(const char * filename, float* output, char * delim)
     {
         FILE * f = fopen(filename,"rt");
         if (f == NULL)
@@ -35,7 +36,8 @@ namespace futil
      * @param output   the output int pointer
      * @param delim    delimiter
      */
-    void FileToPtr(const char * filename, int* output,char * delim)
+    void
+    file_to_pointer(const char * filename, int* output,char * delim)
     {
         FILE * f = fopen(filename,"rt");
         if (f == NULL)
@@ -61,7 +63,8 @@ namespace futil
      * @param filename input file name
      * @return the string read from file
      */
-    std::string FileToStr(const char * filename)
+    std::string
+    file_to_string(const char * filename)
     {
         std::ifstream in(filename, std::ios::in | std::ios::binary);
         if (in)
@@ -83,7 +86,8 @@ namespace futil
      * @param input    input string
      * @param mode     write mode(w/r/a)
      */
-    void StrToFile(const char * filename, const string input, const char * mode)
+    void
+    string_to_file(const char * filename, const string input, const char * mode)
     {
         FILE * f = fopen(filename,mode);
 
@@ -110,7 +114,8 @@ namespace futil
      * @param delim  delimiter
      * @param result result vector
      */
-    void Spliter(const char* str, const char delim, vector<string> &result)
+    void
+    spliter_c(const char* str, const char delim, vector<string> &result)
     {
         int begin = 0;
         int end   = 0;
@@ -147,7 +152,8 @@ namespace futil
      * @param delim  delimiter
      * @param result result vector
      */
-    void Spliter2(const string &s, const char delim, vector<string> &result)
+    void
+    spliter_std(const string &s, const char delim, vector<string> &result)
     {
         stringstream ss(s);
         string item;
@@ -165,7 +171,8 @@ namespace futil
      * @param directory directory path
      *
      */
-    int GetFilesInDirectory(std::vector<string> &out, const string &directory)
+    int
+    get_files_in_dir(std::vector<string> &out, const string &directory)
     {
     #ifdef WINDOWS
         HANDLE dir;

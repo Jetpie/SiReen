@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
     // s = clock();
     char delim[2] = ",";
     // load codebook
-    futil::FileToPtr(codebookPath.c_str(), codebook,delim);
+    futil::file_to_pointer(codebookPath.c_str(), codebook,delim);
     // cout << "codebook:" << float(clock() -s) << endl;
 
     // s = clock();
@@ -53,9 +53,9 @@ int main(int argc, char * argv[])
         string llc_test;
         start= clock();
         try{
-            llc_test = ic.LLCDescriptor(src_new, codebook, 500, 5);
+            llc_test = ic.llc_descriptor(src_new, codebook, 500, 5);
             // cout << llc_test<<endl;
-            futil::StrToFile("/home/bingqingqu/TAOCP/Datasets/test/result_new.txt",
+            futil::string_to_file("/home/bingqingqu/TAOCP/Datasets/test/result_new.txt",
                             llc_test, "a+");
         }
         catch(...){
@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
     delete codebook;
     string directory = "/home/bingqingqu/TAOCP/Datasets/test/";
     vector<string> files_in_dir;
-    futil::GetFilesInDirectory(files_in_dir,directory);
+    futil::get_files_in_dir(files_in_dir,directory);
     cout << files_in_dir[0]<<","<<files_in_dir[1] << endl;
 
 }

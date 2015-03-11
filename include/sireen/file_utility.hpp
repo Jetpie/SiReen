@@ -20,12 +20,12 @@ using namespace std;
 
 namespace futil{
 
-    std::string FileToStr(const char *filename);
-    void FileToPtr(const char * filename, float* output, char * delim);
-    void FileToPtr(const char * filename, int* output, char * delim);
-    void StrToFile(const char * filename, string input, const char * mode);
-    void Spliter(const char*str, const char delim, vector<string>& result);
-    void Split2(const std::string &s, const char delim, std::vector<std::string> &elems);
-    int GetFilesInDirectory(std::vector<string> &out, const string &directory);
+    std::string file_to_string(const char *filename);
+    void file_to_pointer(const char * filename, float* output, char * delim);
+    void file_to_pointer(const char * filename, int* output, char * delim);
+    void string_to_file(const char * filename, string input, const char * mode);
+    void spliter_c(const char*str, const char delim, vector<string>& result);
+    void spliter_std(const std::string &s, const char delim, std::vector<std::string> &elems);
+    int get_files_in_dir(std::vector<string> &out, const string &directory);
 }
 #endif //SIREEN_FILE_UTILITY_H_

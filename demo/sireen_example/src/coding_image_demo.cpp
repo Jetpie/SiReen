@@ -74,7 +74,7 @@ int main(int argc, char * argv[]) {
         return -1;
     }
     char delim[2] = ",";
-    futil::FileToPtr(codebook_path.c_str(), codebook,delim);
+    futil::file_to_pointer(codebook_path.c_str(), codebook,delim);
     if (codebook == NULL) {
         cerr << "codebook error!" << endl;
         return -1;
@@ -90,7 +90,7 @@ int main(int argc, char * argv[]) {
     vector<string> all_images;
     string imgfile;
     string llcstr;
-    futil::GetFilesInDirectory(all_images,image_dir);
+    futil::get_files_in_dir(all_images,image_dir);
     /*********************************************
      *  Step 2 - Traverse the image directory
      *********************************************/
@@ -109,7 +109,7 @@ int main(int argc, char * argv[]) {
                 cout << "\tinvalid source image! --> " << imgfile << endl;
                 continue;
             }
-            llcstr = icoder.LLCDescriptor(src_image, codebook, CB_SIZE, 5);
+            llcstr = icoder.llc_descriptor(src_image, codebook, CB_SIZE, 5);
         }
         catch(...)
         {

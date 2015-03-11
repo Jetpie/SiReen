@@ -50,6 +50,8 @@ BIN_TGT:= $(addprefix $(BINDIR)/, $(patsubst %.cpp,%,$(notdir $(BIN_SRC))))
 # generate the all-dir target
 $(eval $(call gendir, dirs, $(BINDIR) $(OBJDIR) ))
 
+# keep inter-objects for futther compiling
+.PRECIOUS: $(DEP_OBJ)
 .PHONY: bin-all, bin-info, bin-clean, dirs
 bin-all: $(BIN_TGT)
 

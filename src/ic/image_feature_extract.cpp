@@ -104,7 +104,7 @@ ImageCoder::SetParams(int std_width, int std_height, int step, int bin_size)
  * @return the dense sift float-point descriptors
  */
 float*
-ImageCoder::DsiftDescriptor(Mat src_image)
+ImageCoder::dsift_descriptor(Mat src_image)
 {
     // check if source image is graylevel
     if (src_image.channels() != 1)
@@ -155,11 +155,11 @@ ImageCoder::DsiftDescriptor(Mat src_image)
  * @return a conversion from llc feature to string
  */
 string
-ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
+ImageCoder::llc_descriptor(Mat src_image, float *codebook,
                           const int ncb, const int k)
 {
 
-    float* dsift_descr = this->DsiftDescriptor(src_image);
+    float* dsift_descr = this->dsift_descriptor(src_image);
     if(!dsift_descr)
         throw runtime_error("image not loaded or resized properly");
     // get sift descriptor size and number of keypoints
@@ -168,7 +168,7 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
 
     // eliminate peak gradients and normalize
     // initialize dsift descriptors and codebook Eigen matrix
-    MatrixXf mat_dsift= this->NormSift(dsift_descr,descr_size,n_keypoints,true);
+    MatrixXf mat_dsift= this->norm_sift(dsift_descr,descr_size,n_keypoints,true);
     Map<MatrixXf> mat_cb(codebook,descr_size,ncb);
 
     // Step 1 - compute eucliean distance and sort
@@ -270,7 +270,7 @@ ImageCoder::LLCDescriptor(Mat src_image, float *codebook,
  * @return MatrixXf normalized dsift descripters in Eigen::MatrixXf format
  */
 Eigen::MatrixXf
-ImageCoder::NormSift(float *descriptors, int row, int col,
+ImageCoder::norm_sift(float *descriptors, int row, int col,
                      const bool normalized=false)
 {
     // use Eigen Map to pass float* to MatrixXf
