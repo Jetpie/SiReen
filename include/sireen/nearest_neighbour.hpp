@@ -1,4 +1,5 @@
-// Optimized functions for kd-tree construction and searching.
+// Optimized c++ general construction and searching functions for
+// KD-Tree.
 //
 // @author: Bingqing Qu
 //
@@ -13,6 +14,7 @@
 #include <string.h>
 #include <algorithm>
 #include <assert.h>
+#include <iomanip>
 //#define NDEBUG
 using namespace std;
 
@@ -31,6 +33,10 @@ namespace nnse
     inline bool operator<(const KeyValue& lhs, const KeyValue& rhs)
     {return lhs.value < rhs.value; }
 
+    // compute median position of a group of index
+    inline size_t get_median_index(const size_t x)
+    {return ( x / 2); }
+
     /// Define Feature structure
     struct Feature
     {
@@ -38,6 +44,8 @@ namespace nnse
         size_t dimension;
         /** feature data */
         float* data;
+        Feature(){}
+        Feature(float* data, const size_t dim) : dimension(dim), data(data){}
 
     };
     /// Node definitions for kd-tree
@@ -57,6 +65,20 @@ namespace nnse
         KDTreeNode* left;
         /** right child */
         KDTreeNode* right;
+        // DEBUG
+        void print()
+        {
+            cout << "**********" << endl;
+            cout << "pivot_dim:" << pivot_dim << endl;
+            cout << "pivot_val:" << pivot_val << endl;
+            cout << "leaf:" << leaf << endl;
+            cout << "n:" << n << endl;
+            size_t root_idx = get_median_index(n);
+            cout << "root index:" << root_idx <<endl;
+            cout << "feature:" <<"(" <<features[root_idx].data[0] <<","
+                 << features[root_idx].data[1] << ")"<<endl;
+        };
+        friend class KDTree;
     };
 
     ///
@@ -101,6 +123,7 @@ namespace nnse
          *
          */
         void partition(KDTreeNode*);
+        void traverse_to_leaf(KDTreeNode*);
 
     public:
         /** Constructor */
@@ -126,7 +149,39 @@ namespace nnse
          *
          */
         void knn_search_bbf(float* );
+        void knn_search_brute_force(float*);
+        void knn_search_kdtree(float* );
 
+
+
+
+        // DEBUG
+        void print_tree()
+        {
+
+            this->print_node(this->root_);
+
+        };
+        void print_node(KDTreeNode* node,int indent=0)
+        {
+            if(node != NULL)
+            {
+                if(node->left)
+                    print_node(node->left,indent+8);
+                if(node->right)
+                    print_node(node->right,indent+8);
+
+
+                    if(indent)
+                    {
+                        cout << setw(indent) << ' ';
+                    }
+                    size_t k = get_median_index(node->n);
+                    cout <<"(" << node->features[k].data[0] << ","
+                          << node->features[k].data[1] << ")\n ";
+
+            }
+        }
 
     };
 

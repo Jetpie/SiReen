@@ -1,3 +1,11 @@
+// Optimized c++ general construction and searching functions for
+// KD-Tree.
+//
+// @author: Bingqing Qu
+//
+// Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
+//
+// @license: See LICENSE at root directory
 #include "sireen/nearest_neighbour.hpp"
 
 namespace nnse
@@ -31,10 +39,7 @@ namespace nnse
     {
         // TODO: add check on input features
         // check input
-        if( !features )
-        {
-            cerr << "Error: KDTree::Build(): input error!" << endl;
-        }
+
         // init
         this->root_ = this->init_node(features, n);
 
@@ -43,10 +48,15 @@ namespace nnse
     }
 
     /**
-     * initialization of kd-tree from the feature database
+     * Initialization of a kd-tree node, this will set initial position
+     * of feature pointer, the number of feature should be taken and
+     * a default value for patition dimension
      *
      * @param features an array of features
      * @param n        number of features
+     *
+     * @return initialized kd-tree node, furthor expand should be
+     *         followed
      */
     KDTreeNode*
     KDTree::init_node(Feature* features, const size_t n)
@@ -56,14 +66,21 @@ namespace nnse
         // initialize index, features and n params for root
         node->pivot_dim = -1;
         node->features = features;
+        node->leaf = false;
         node->n = n;
+        // initialize to NULL
+        node->left = NULL;
+        node->right = NULL;
 
         return node;
 
     }
 
     /**
-     * expand kd-tree after root node is initialized
+     * Expand the subtree. This should be called after a kd-tree
+     * node is initialized. If the current node is not a leaf, a
+     * partition is applied on features. Then, it expand the two
+     * children recursively.
      *
      * @param node current kd-tree node
      */
@@ -71,14 +88,15 @@ namespace nnse
     KDTree::expand_subtree(KDTreeNode* node)
     {
         // check leaf condition for stoping
-        if( node->n==1 || node->n ==0)
+        if( node->n == 1 || node->n == 0)
         {
             node->leaf = true;
+            cout << " leaf " << endl;
             return;
         }
         // the following parts should be very clear
         this->partition(node);
-
+        cout << "pivot_dim:" << node->pivot_dim << endl;
         if(node->left)
             this->expand_subtree(node->left);
         if(node->right)
@@ -149,7 +167,7 @@ namespace nnse
             order.push_back(KeyValue(i,features[i].data[pivot_dim]));
 
         // get the median index number
-        const size_t k = (n-1) / 2;
+        const size_t k = get_median_index(n);
 
         // the nth_element can do what we want for partition. For given
         // begin and end iterators, and a k iterator, there is no
@@ -160,8 +178,9 @@ namespace nnse
         pivot_val = order[k].value;
         node->pivot_dim = pivot_dim;
         node->pivot_val = pivot_val;
+        cout << "pivot_val:" << pivot_val << endl;
 
-        // ***2 PARTIOTION THE NODE***
+        // ***2 PARTIOTION THE NODE BY PIVOT***
 
         // apply a re-order iterable algorithm(in-place) here.
         // the algorithm use a "permute-from" mind to do a permute-cycle
@@ -199,13 +218,13 @@ namespace nnse
         // if all features fall on same side, make node as a leaf
         if(k + 1 == n)
         {
-            node->leaf=true;
+            node->left = this->init_node(features, k);
             return;
         }
+        cout << "k:" << k << endl;
         //
-        node->left = this->init_node(features, k+1);
-        node->right = this->init_node(features+k, n-k+1);
-
+        node->left = this->init_node(features, k);
+        node->right = this->init_node(features + (k + 1), (n - k - 1) );
     }
 
 }

@@ -66,7 +66,7 @@ private:
      * @param step       VlDsiftFilter step parameter
      * @param bin_size   VlDsiftFilter binSize parameter
      */
-    void SetParams(int, int, int, int);
+    void set_params(int, int, int, int);
 
 
 public:

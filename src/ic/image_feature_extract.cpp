@@ -21,7 +21,7 @@ ImageCoder::ImageCoder(void)
 {
     this->dsift_filter_ = NULL;
     /* default setting */
-    this->SetParams(128,128,8,16);
+    this->set_params(128,128,8,16);
 }
 /**
  * Constructer overloading
@@ -29,7 +29,7 @@ ImageCoder::ImageCoder(void)
 ImageCoder::ImageCoder(int std_width, int std_height, int step, int bin_size)
 {
     this->dsift_filter_ = NULL;
-    this->SetParams(std_width,std_height,step,bin_size);
+    this->set_params(std_width,std_height,step,bin_size);
 }
 /**
  * Constructer overloading
@@ -64,7 +64,7 @@ ImageCoder::~ImageCoder(void){
  * @param bin_size   VlDsiftFilter binSize parameter
  */
 void
-ImageCoder::SetParams(int std_width, int std_height, int step, int bin_size)
+ImageCoder::set_params(int std_width, int std_height, int step, int bin_size)
 {
     this->std_width_ = std_width;
     this->std_height_ = std_height;
