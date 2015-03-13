@@ -78,7 +78,6 @@ namespace nnse
             cout << "feature:" <<"(" <<features[root_idx].data[0] <<","
                  << features[root_idx].data[1] << ")"<<endl;
         };
-        friend class KDTree;
     };
 
     ///
@@ -118,6 +117,12 @@ namespace nnse
          * 2.Partition the features by the pivot. This is done by firstly,
          * get the order vector and secondly, re-order the features by that
          * order vector.
+         *
+         * The result of the partition is the Feature array is re-ordered
+         * and a new node contains left child of  features[0:k] and the
+         * right child contains the right child of features[k+1:k+1+n],
+         * where n is the length of right child. The current root node is
+         * features[k]
          *
          * @param node the current node
          *
@@ -168,17 +173,18 @@ namespace nnse
             {
                 if(node->left)
                     print_node(node->left,indent+8);
+
+                if(indent)
+                {
+                    cout << setw(indent) << ' ';
+                }
+                size_t k = get_median_index(node->n);
+                cout <<"(" << node->features[k].data[0] << ","
+                     << node->features[k].data[1] << ")\n";
+
                 if(node->right)
                     print_node(node->right,indent+8);
 
-
-                    if(indent)
-                    {
-                        cout << setw(indent) << ' ';
-                    }
-                    size_t k = get_median_index(node->n);
-                    cout <<"(" << node->features[k].data[0] << ","
-                          << node->features[k].data[1] << ")\n ";
 
             }
         }

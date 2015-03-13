@@ -37,14 +37,20 @@ namespace nnse
     void
     KDTree::build(Feature* features, const size_t n)
     {
-        // TODO: add check on input features
-        // check input
-
+        // check inputs
+        if(!features || n <= 0)
+        {
+            cerr << " KDTree::build : Error input, no features or n <= 0"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return;
+        }
         // init
         this->root_ = this->init_node(features, n);
-
+        // never NULL assertion
+        assert(this->root_);
         // expand
         this->expand_subtree(this->root_);
+
     }
 
     /**
@@ -63,8 +69,16 @@ namespace nnse
     {
         // dynamic allocate root node
         KDTreeNode* node = new KDTreeNode;
+        if(!node)
+        {
+            cerr << " KDTree::init_node : memory allocation to KDTreeNode fail!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return NULL;
+        }
         // initialize index, features and n params for root
         node->pivot_dim = -1;
+        // non-negative feature assumption
+        node->pivot_val = -1.0;
         node->features = features;
         node->leaf = false;
         node->n = n;
@@ -91,12 +105,11 @@ namespace nnse
         if( node->n == 1 || node->n == 0)
         {
             node->leaf = true;
-            cout << " leaf " << endl;
             return;
         }
         // the following parts should be very clear
         this->partition(node);
-        cout << "pivot_dim:" << node->pivot_dim << endl;
+
         if(node->left)
             this->expand_subtree(node->left);
         if(node->right)
@@ -115,6 +128,12 @@ namespace nnse
      * get the order vector and secondly, re-order the features by that
      * order vector.
      *
+     * The result of the partition is the Feature array is re-ordered
+     * and a new node contains left child of  features[0:k] and the
+     * right child contains the right child of features[k+1:k+1+n],
+     * where n is the length of right child. The current root node is
+     * features[k]
+     *
      * @param node the current node
      *
      */
@@ -125,6 +144,7 @@ namespace nnse
 
         // variable initialization
         Feature* features = node->features;
+        assert(features);
         size_t pivot_dim = 0;
         float pivot_val, mean, var, x_diff = 0;
         float var_max = -1.0;
@@ -178,7 +198,6 @@ namespace nnse
         pivot_val = order[k].value;
         node->pivot_dim = pivot_dim;
         node->pivot_val = pivot_val;
-        cout << "pivot_val:" << pivot_val << endl;
 
         // ***2 PARTIOTION THE NODE BY PIVOT***
 
