@@ -314,7 +314,7 @@ namespace nnse
         KDTreeNode* node;
         // checklist for backtrack use
         stack<KDTreeNode*> check_list;
-
+        Feature result;
 
         while(!check_list.empty())
         {
@@ -329,7 +329,7 @@ namespace nnse
 
             }
         }
-
+        return result;
     }
 
 }

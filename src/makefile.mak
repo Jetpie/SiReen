@@ -42,7 +42,7 @@ OBJDIR = $(SIREENROOT)/obj/$(ARCH)
 # --------------------------------------------------------------------
 #                                                                Build
 # --------------------------------------------------------------------
-DEP_SRC:= $(wildcard $(SIREENROOT)/src/ic/*.cpp)
+DEP_SRC:= $(wildcard $(SIREENROOT)/src/cpp/*.cpp)
 DEP_OBJ:= $(addprefix $(OBJDIR)/, $(patsubst %.cpp,%.o,$(notdir $(DEP_SRC) )))
 BIN_SRC:= $(wildcard $(SIREENROOT)/src/tests/*.cpp)
 BIN_TGT:= $(addprefix $(BINDIR)/, $(patsubst %.cpp,%,$(notdir $(BIN_SRC))))
@@ -66,7 +66,7 @@ $(BINDIR)/%: $(SIREENROOT)/src/tests/%.cpp $(DEP_OBJ) $(dirs)
 	$(CC) $(BIN_CFLAGS) $< $(DEP_OBJ) $(BIN_LDFLAGS) -o $@
 
 
-$(OBJDIR)/%.o: $(SIREENROOT)/src/ic/%.cpp $(dirs)
+$(OBJDIR)/%.o: $(SIREENROOT)/src/cpp/%.cpp $(dirs)
 	$(call C,CC) $(BIN_CFLAGS) -c -o $@ $<
 
 # only cleaning generated targets here
