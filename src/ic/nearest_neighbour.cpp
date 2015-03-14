@@ -46,7 +46,7 @@ namespace nnse
         }
         // init
         this->root_ = this->init_node(features, n);
-        // never NULL assertion
+        // sanity check for initialized root
         assert(this->root_);
         // expand
         this->expand_subtree(this->root_);
@@ -144,6 +144,7 @@ namespace nnse
 
         // variable initialization
         Feature* features = node->features;
+        // sanity check for features
         assert(features);
         size_t pivot_dim = 0;
         float pivot_val, mean, var, x_diff = 0;
@@ -191,7 +192,7 @@ namespace nnse
 
         // the nth_element can do what we want for partition. For given
         // begin and end iterators, and a k iterator, there is no
-        // element greater than *k at and likewise on the right.
+        // element greater than *k at left and likewise on the right.
         std::nth_element(order.begin(), order.begin()+k, order.end());
 
         // assign pivot dimension and value for current ndoe
@@ -235,15 +236,100 @@ namespace nnse
         }
 
         // if all features fall on same side, make node as a leaf
+        // generally, under this condition, k = 1 and n = 2?
+        // TODO: prove the above assumption
         if(k + 1 == n)
         {
-            node->left = this->init_node(features, k);
+            node->leaf = true;
             return;
         }
         cout << "k:" << k << endl;
         //
-        node->left = this->init_node(features, k);
+        node->left = this->init_node(features, k + 1);
         node->right = this->init_node(features + (k + 1), (n - k - 1) );
+    }
+    /**
+     * Traverse a kd-tree to a leaf node. Path decision are made
+     * by comparision of values between the input feature and node
+     * on the node's partition dimension.
+     *
+     * @param feature a input feature
+     * @param node a start node
+     *
+     * @return a leaf node with node.leaf=true
+     */
+    KDTreeNode*
+    KDTree::traverse_to_leaf(Feature feature, KDTreeNode* node,
+                             stack<KDTreeNode*> &node_stack)
+    {
+        if(!node)
+        {
+            cerr << " KDTree::traverse_to_leaf : bad node!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return NULL;
+
+        }
+        KDTreeNode* cur_node = node;
+        float value;
+        size_t dim;
+
+
+        while(cur_node && !cur_node->leaf)
+        {
+            // partition dimension and value
+            dim = cur_node->pivot_dim;
+            value = cur_node->pivot_val;
+
+            // sanity check for dimension
+            assert(dim < this->dimension_);
+
+            // go left child
+            if(feature.data[dim] <= value)
+            {
+                node_stack.push(cur_node->right);
+                cur_node = cur_node->left;
+            }
+            else
+            {
+                node_stack.push(cur_node->left);
+                cur_node = cur_node->right;
+            }
+        }
+
+        return cur_node;
+    }
+
+    /**
+     * Basic k-nearest-neighbour search method use for kd-tree.
+     * First, traverse from root node to a leaf node and. Second,
+     * backtrack to search for better node
+     *
+     * @param feature query Feature
+     *
+     * @return
+     */
+    Feature
+    KDTree::knn_search_basic(Feature feature)
+    {
+        KDTreeNode* node;
+        // checklist for backtrack use
+        stack<KDTreeNode*> check_list;
+
+
+        while(!check_list.empty())
+        {
+            node = check_list.top();
+            check_list.pop();
+            // find leaf and push unprocessed to stack
+            node = this->traverse_to_leaf(feature,this->root_,check_list);
+
+            // TODO: update best
+            for(size_t i = 0; i < node->n; ++i)
+            {
+
+            }
+        }
+
     }
 
 }

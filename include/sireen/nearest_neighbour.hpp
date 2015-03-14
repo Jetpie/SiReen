@@ -15,6 +15,10 @@
 #include <algorithm>
 #include <assert.h>
 #include <iomanip>
+#include <math.h>
+#include <stack>
+#include <queue>
+#include "sireen/metrics.hpp"
 //#define NDEBUG
 using namespace std;
 
@@ -35,7 +39,11 @@ namespace nnse
 
     // compute median position of a group of index
     inline size_t get_median_index(const size_t x)
-    {return ( x / 2); }
+    {return ( (x - 1) / 2); }
+
+    // epic safe absolute operation on all types
+    template<class T>
+    inline T abs(const T x){return (x < 0 ? -x : x);}
 
     /// Define Feature structure
     struct Feature
@@ -73,10 +81,13 @@ namespace nnse
             cout << "pivot_val:" << pivot_val << endl;
             cout << "leaf:" << leaf << endl;
             cout << "n:" << n << endl;
-            size_t root_idx = get_median_index(n);
-            cout << "root index:" << root_idx <<endl;
-            cout << "feature:" <<"(" <<features[root_idx].data[0] <<","
-                 << features[root_idx].data[1] << ")"<<endl;
+            cout << "feature:" <<endl;
+            for(size_t i = 0;i<n;++i)
+            {
+
+            cout <<"(" <<features[i].data[0] <<","
+                 << features[i].data[1] << ")"<<endl;
+            }
         };
     };
 
@@ -128,7 +139,6 @@ namespace nnse
          *
          */
         void partition(KDTreeNode*);
-        void traverse_to_leaf(KDTreeNode*);
 
     public:
         /** Constructor */
@@ -155,11 +165,29 @@ namespace nnse
          */
         void knn_search_bbf(float* );
         void knn_search_brute_force(float*);
-        void knn_search_kdtree(float* );
 
+        /**
+         * Basic k-nearest-neighbour search method use for kd-tree.
+         * First, traverse from root node to a leaf node and. Second,
+         * backtrack to search for better node
+         *
+         * @param feature query Feature
+         *
+         * @return
+         */
+        Feature knn_search_basic(Feature feature);
 
-
-
+        /**
+         * Traverse a kd-tree to a leaf node. Path decision are made
+         * by comparision of values between the input feature and node
+         * on the node's partition dimension.
+         *
+         * @param feature a input feature
+         * @param node a start node
+         *
+         * @return a leaf node with node.leaf=true
+         */
+        KDTreeNode* traverse_to_leaf(Feature ,KDTreeNode*, stack<KDTreeNode*>&);
         // DEBUG
         void print_tree()
         {
@@ -178,9 +206,12 @@ namespace nnse
                 {
                     cout << setw(indent) << ' ';
                 }
-                size_t k = get_median_index(node->n);
-                cout <<"(" << node->features[k].data[0] << ","
-                     << node->features[k].data[1] << ")\n";
+                // size_t k = get_median_index(node->n);
+                // cout <<"(" << node->features[k].data[0] << ","
+                //      << node->features[k].data[1] << ")\n";
+                cout <<"(" << node->pivot_dim << ","
+                     << node->pivot_val <<","
+                     << node->n << ")\n";
 
                 if(node->right)
                     print_node(node->right,indent+8);

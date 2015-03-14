@@ -19,12 +19,12 @@ except:
     print("no cv2 found")
 # edit root for absolute if any path problem encountered
 SIREEN_ROOT = "../../"
-
+CURRENT = "msrc_ocid_v2"
 labels = []
 features = []
 start = time.time()
 # read llc result file
-with open(SIREEN_ROOT + "res/llc/caltech101.txt","r") as infile:
+with open(SIREEN_ROOT + "res/llc/"+CURRENT+ ".txt","r") as infile:
     for line in infile:
         contents = line.strip().split("\t")
         try:
@@ -49,10 +49,10 @@ print("Elasped time for data search : %f"%(time.time() - start))
 start = time.time()
 tp = 0.0
 b = 0.0
-with open(SIREEN_ROOT + "res/result/caltech101.txt","w") as outfile:
+with open(SIREEN_ROOT + "res/result/"+CURRENT+".txt","w") as outfile:
     for idx in idxs:
         prefix = labels[idx[0]].split("_")[0]
-        idx = np.random.choice(591,10,replace=False)
+        # idx = np.random.choice(591,10,replace=False)
         for i in idx[1:]:
             b +=1
             if labels[i].split("_")[0] == prefix:
@@ -65,7 +65,7 @@ print("Elasped time for write file : %f"%(time.time() - start))
 
 for idx in idxs:
     images = [cv2.resize(cv2.imread(SIREEN_ROOT +  \
-                'res/images/caltech101/' + labels[i]), \
+                'res/images/"+CURRENT+"/' + labels[i]), \
                 (64,64),interpolation=cv2.INTER_CUBIC) for i in idx]
     result_img = np.concatenate(images,axis=1)
 
