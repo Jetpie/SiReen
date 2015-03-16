@@ -243,7 +243,7 @@ namespace nnse
             node->leaf = true;
             return;
         }
-        cout << "k:" << k << endl;
+
         //
         node->left = this->init_node(features, k + 1);
         node->right = this->init_node(features + (k + 1), (n - k - 1) );
@@ -314,22 +314,51 @@ namespace nnse
         KDTreeNode* node;
         // checklist for backtrack use
         stack<KDTreeNode*> check_list;
-        Feature result;
+
+        // best results
+        Feature closest;
+        float cur_best = numeric_limits<float>::max();
+
+        float dist = 0;
+        check_list.push(this->root_);
+
+        // node = check_list.top();
+        // check_list.pop();
+        // cout << check_list.size() << endl;
+
+        // // find leaf and push unprocessed to stack
+        // node = this->traverse_to_leaf(feature,node,check_list);
+        // cout << check_list.size() << endl;
+
+        // closest = node->features[0];
 
         while(!check_list.empty())
         {
+            // pop the element
             node = check_list.top();
             check_list.pop();
-            // find leaf and push unprocessed to stack
-            node = this->traverse_to_leaf(feature,this->root_,check_list);
+            cout << check_list.size() << endl;
+            // check if pitvot dimension comparison can beat current
+            // best distance
+            if(!(abs(node->pivot_val - feature.data[node->pivot_dim]) < cur_best))
+                continue;
 
-            // TODO: update best
+            // find leaf and push unprocessed to stack
+            node = this->traverse_to_leaf(feature,node,check_list);
+
             for(size_t i = 0; i < node->n; ++i)
             {
-
+                dist = spat::euclidean(node->features[i].data,feature.data,
+                                       this->dimension_);
+                // update current best
+                if(dist < cur_best)
+                {
+                    closest = node->features[i];
+                    cur_best = dist;
+                }
             }
         }
-        return result;
+        return closest;
     }
 
 }

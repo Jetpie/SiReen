@@ -18,7 +18,6 @@
 #include <math.h>
 #include <stack>
 #include <queue>
-#include <limits>
 #include "sireen/metrics.hpp"
 //#define NDEBUG
 using namespace std;
@@ -53,14 +52,9 @@ namespace nnse
         float* data;
         /** feature dimension */
         size_t dimension;
-        Feature(float* data, const size_t dim) : data(data) , dimension(dim) {}
-        Feature() : data(),dimension(){}
-        Feature& operator=(Feature other)
-        {
-            std::swap(data,other.data);
-            std::swap(dimension,other.dimension);
-            return *this;
-        }
+        inline 
+        // Feature(float* data, const size_t dim) : data(data) , dimension(dim) {}
+        // Feature() : data(),dimension(){}
     };
     /// Node definitions for kd-tree
     struct KDTreeNode
@@ -194,9 +188,6 @@ namespace nnse
          * @return a leaf node with node.leaf=true
          */
         KDTreeNode* traverse_to_leaf(Feature ,KDTreeNode*, stack<KDTreeNode*>&);
-
-
-
         // DEBUG
         void print_tree()
         {

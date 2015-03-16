@@ -1,40 +1,54 @@
 #include "sireen/nearest_neighbour.hpp"
-
+#include "sireen/metrics.hpp"
 using namespace std;
 using namespace nnse;
+
+
 int main()
 {
     Feature* features = new Feature[6];
     float p[2] = {2.0,3.0};
-    features[0] = Feature(p,2);
+    features[0] = {p,2};
     float p1[2] = {5.0,4.0};
-    features[1] = Feature(p1,2);
+    features[1] = {p1,2};
     float p2[2] = {9.0,6.0};
-    features[2] = Feature(p2,2);
+    features[2] = {p2,2};
     float p3[2] = {4.0,7.0};
-    features[3] = Feature(p3,2);
+    features[3] = {p3,2};
     float p4[2] = {8.0,1.0};
-    features[4] = Feature(p4,2);
+    features[4] = {p4,2};
     float p5[2] = {7.0,2.0};
-    features[5] = Feature(p5,2);
+    features[5] = {p5, 2};
 
+    Feature t;
+    t = features[5];
+    cout << "[" <<t.data[0] <<"," <<t.data[1] << "]" << endl;
+    cout << "[" <<features[5].data[0] <<"," <<features[5].data[1] << "]" << endl;
     for(size_t i = 0; i < 6 ;++i)
     {
         cout << "[" << features[i].data[0] <<"," <<features[i].data[1] << "]";
     }
     cout << endl;
     const size_t dim = 2;
-    nnse::KDTree* kdtree = new nnse::KDTree(dim);
-    kdtree->build(features,6);
+
+
+    nnse::KDTree kdtree(dim);
+    kdtree.build(features,6);
     for(size_t i = 0; i < 6 ;++i)
     {
         cout << "[" <<features[i].data[0] <<"," <<features[i].data[1] << "]";
     }
     cout << endl;
-    kdtree->print_tree();
+    kdtree.print_tree();
+
+    cout << "euclidean test: " <<  spat::euclidean(p2,p1,2) << endl;
+    cout << "cosine test: " <<  spat::cosine(p2,p1,2) << endl;
     float q[2] = {2.1,3.1};
-    Feature query = {q,2};
-    cout << nnse::abs(-1) << endl;
+
+    Feature close = kdtree.knn_search_basic({q,2});
+    cout << "[" <<close.data[0] <<"," <<close.data[1] << "]";
+
+
 
     delete [] features;
     // cout << "***std::nth_element Test***" << endl;
