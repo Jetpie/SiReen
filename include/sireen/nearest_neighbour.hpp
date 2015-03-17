@@ -33,12 +33,12 @@ namespace nnse
 {
     /// key value pair. Not use the std::pair because there is default
     /// "<" operator overloading for it and it is too heavy for operation.
-    template <class T>
+    template <class T, class V = double>
     struct KeyValue
     {
         T key;
-        double value;
-        KeyValue(const T k, const double v) : key(k), value(v){}
+        V value;
+        KeyValue(const T k, const V v) : key(k), value(v){}
     };
     // Operator overloading
     template <class T>
@@ -95,22 +95,6 @@ namespace nnse
         /** right child */
         KDTreeNode* right;
 
-        // DEBUG
-        void print()
-        {
-            cout << "**********" << endl;
-            cout << "pivot_dim:" << pivot_dim << endl;
-            cout << "pivot_val:" << pivot_val << endl;
-            cout << "leaf:" << leaf << endl;
-            cout << "n:" << n << endl;
-            cout << "feature:" <<endl;
-            for(size_t i = 0;i<n;++i)
-            {
-
-            cout <<"(" <<features[i].data[0] <<","
-                 << features[i].data[1] << ")"<<endl;
-            }
-        };
     };
 
     ///
@@ -248,19 +232,17 @@ namespace nnse
          * Search for approximate k nearest neighbours using the
          * Best Bin First approach.
          *
-         * @param feature query feture data in array form
-         * @param k number of nearest neighbour returned
+         * @param feature    query feture data in array form
+         * @param k          number of nearest neighbour returned
          * @param max_epoch  maximum of epoch of search
          *
          * @return
          */
         std::vector<Feature> knn_bbf(double*, size_t, size_t);
-
-
-
-
+        std::vector<Feature> knn_bbf_opt(double*, size_t, size_t);
 
         // DEBUG
+        // pre-order to print the tree node
         void print_tree()
         {
             this->print_node(this->root_);

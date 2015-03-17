@@ -540,8 +540,8 @@ namespace nnse
      * Search for approximate k nearest neighbours using the
      * Best Bin First approach.
      *
-     * @param feature query feture data in array form
-     * @param k number of nearest neighbour returned
+     * @param feature    query feture data in array form
+     * @param k          number of nearest neighbour returned
      * @param max_epoch  maximum of epoch of search
      *
      * @return
