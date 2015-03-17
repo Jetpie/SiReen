@@ -1,11 +1,13 @@
 // Optimized c++ general construction and searching functions for
-// KD-Tree.
+// KD-Tree. This implementation has following features:
+// 1. Fixed memory usage for constucting tree with features.
+// 2. Optimized distance comparison for seach
 //
 // @author: Bingqing Qu
 //
 // Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
 //
-// @license: See LICENSE at root directory
+// @license: See LICENSE at root directory#ifndef SIREEN_NEAREST_NEIGHBOUR_H_
 #ifndef SIREEN_NEAREST_NEIGHBOUR_H_
 #define SIREEN_NEAREST_NEIGHBOUR_H_
 
@@ -23,7 +25,7 @@
 #include <math.h>
 
 #include "sireen/metrics.hpp"
-//#define NDEBUG
+#define NDEBUG
 using namespace std;
 
 // nnse is short for "nearest neighbour search"
@@ -126,6 +128,12 @@ namespace nnse
     class KDTree
     {
     private:
+        // typedef for shorter written
+        typedef stack<KDTreeNode*> NodeStack;
+        typedef KeyValue<KDTreeNode*> NodeBind;
+        typedef priority_queue<NodeBind, vector<NodeBind>, greater<NodeBind> > NodeMinPQ;
+        typedef KeyValue<Feature> FeatureBind;
+        typedef priority_queue<FeatureBind, vector<FeatureBind> > FeatureMaxPQ;
         /** kd-tree root node */
         KDTreeNode* root_;
         /** kd-tree feature dimension */
@@ -174,14 +182,27 @@ namespace nnse
         /**
          * Traverse a kd-tree to a leaf node. Path decision are made
          * by comparision of values between the input feature and node
-         * on the node's partition dimension.
+         * on the node's partition dimension. The backtrack path is
+         * recorded by a std::stack
          *
          * @param feature a input feature
          * @param node a start node
          *
          * @return a leaf node with node.leaf=true
          */
-        KDTreeNode* traverse_to_leaf(double* ,KDTreeNode*, stack<KDTreeNode*>&);
+        KDTreeNode* traverse_to_leaf(double*, KDTreeNode*, NodeStack&);
+        /**
+         * Traverse a kd-tree to a leaf node. Path decision are made
+         * by comparision of values between the input feature and node
+         * on the node's partition dimension. The backtrack path is
+         * recorded by a std::priority_queue
+         *
+         * @param feature a input feature
+         * @param node a start node
+         *
+         * @return a leaf node with node.leaf=true
+         */
+        KDTreeNode* traverse_to_leaf(double*, KDTreeNode*, NodeMinPQ&);
 
     public:
         /** Constructor */
@@ -203,13 +224,6 @@ namespace nnse
          */
         void build(Feature*, const size_t);
         /**
-         *
-         *
-         */
-        void knn_bbf(double* );
-        void knn_brute_force(double*);
-
-        /**
          * Basic k-nearest-neighbour search method use for kd-tree.
          * First, traverse from root node to a leaf node and. Second,
          * backtrack to search for better node
@@ -219,6 +233,28 @@ namespace nnse
          * @return
          */
         std::vector<Feature> knn_basic(double*, size_t);
+        /**
+         * Basic kd-tree search with optmization on comparison method.
+         * The comparison of distance use a early-stop startegy if current
+         * cumulative squared integral is already over the greatest-smallest
+         * value in the min-priority queue.
+         *
+         * @param feature query feature data in array form
+         *
+         * @return
+         */
+        std::vector<Feature> knn_basic_opt(double*, size_t);
+        /**
+         * Search for approximate k nearest neighbours using the
+         * Best Bin First approach.
+         *
+         * @param feature query feture data in array form
+         * @param k number of nearest neighbour returned
+         * @param max_epoch  maximum of epoch of search
+         *
+         * @return
+         */
+        std::vector<Feature> knn_bbf(double*, size_t, size_t);
 
 
 

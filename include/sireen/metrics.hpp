@@ -24,5 +24,7 @@ namespace spat
     // input vectors are normalized
     double euclidean(const double* x,const double* y, const size_t dim,
                     const bool normalized = false);
+    bool optimize_compare(const double* x,const double* y, const double target,
+                          const size_t dim, double &dist);
 }
 #endif

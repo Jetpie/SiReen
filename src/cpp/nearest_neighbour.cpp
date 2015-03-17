@@ -1,5 +1,7 @@
 // Optimized c++ general construction and searching functions for
-// KD-Tree.
+// KD-Tree. This implementation has following features:
+// 1. Fixed memory usage for constucting tree with features.
+// 2. Optimized distance comparison for seach
 //
 // @author: Bingqing Qu
 //
@@ -252,7 +254,8 @@ namespace nnse
     /**
      * Traverse a kd-tree to a leaf node. Path decision are made
      * by comparision of values between the input feature and node
-     * on the node's partition dimension.
+     * on the node's partition dimension. The backtrack path is
+     * recorded by a std::stack
      *
      * @param feature a input feature
      * @param node a start node
@@ -260,8 +263,7 @@ namespace nnse
      * @return a leaf node with node.leaf=true
      */
     KDTreeNode*
-    KDTree::traverse_to_leaf(double* feature, KDTreeNode* node,
-                             stack<KDTreeNode*> &node_stack)
+    KDTree::traverse_to_leaf(double* feature,KDTreeNode* node, NodeStack& container)
     {
         if(!node)
         {
@@ -270,10 +272,10 @@ namespace nnse
             return NULL;
 
         }
+        KDTreeNode* other;
         KDTreeNode* cur_node = node;
         double value;
         size_t dim;
-
 
         while(cur_node && !cur_node->leaf)
         {
@@ -287,19 +289,74 @@ namespace nnse
             // go to a child and preserve the other
             if(feature[dim] <= value)
             {
-                node_stack.push(cur_node->right);
+                other = cur_node->right;
                 cur_node = cur_node->left;
             }
             else
             {
-                node_stack.push(cur_node->left);
+                other = cur_node->left;
                 cur_node = cur_node->right;
             }
+            if(other)
+                container.push(other);
         }
 
         return cur_node;
     }
+    /**
+     * Traverse a kd-tree to a leaf node. Path decision are made
+     * by comparision of values between the input feature and node
+     * on the node's partition dimension. The backtrack path is
+     * recorded by a std::priority_queue
+     *
+     * @param feature a input feature
+     * @param node a start node
+     *
+     * @return a leaf node with node.leaf=true
+     */
+    KDTreeNode*
+    KDTree::traverse_to_leaf(double* feature,KDTreeNode* node, NodeMinPQ& container)
+    {
+        if(!node)
+        {
+            cerr << " KDTree::traverse_to_leaf : bad node!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return NULL;
 
+        }
+        KDTreeNode* other;
+        KDTreeNode* cur_node = node;
+        double value;
+        size_t dim;
+
+        while(cur_node && !cur_node->leaf)
+        {
+            // partition dimension and value
+            dim = cur_node->pivot_dim;
+            value = cur_node->pivot_val;
+
+            // sanity check for dimension
+            assert(dim < this->dimension_);
+
+            // go to a child and preserve the other
+            if(feature[dim] <= value)
+            {
+                other = cur_node->right;
+                cur_node = cur_node->left;
+            }
+            else
+            {
+                other = cur_node->left;
+                cur_node = cur_node->right;
+            }
+            if(other)
+                container.push(NodeBind(other,
+                  abs(other->pivot_val - feature[other->pivot_dim])
+                               ));
+        }
+
+        return cur_node;
+    }
     /**
      * Basic k-nearest-neighbour search method use for kd-tree.
      * First, traverse from root node to a leaf node and. Second,
@@ -312,18 +369,22 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_basic(double* feature, size_t k)
     {
-        KDTreeNode* node;
-        // checklist for backtrack use
-        stack<KDTreeNode*> check_list;
-        // min-priority queue to keep top k lagrest(reversed order
-        // of distances). The features with largest distances will be
-        // passed to returnd vector.
-        std::priority_queue<KeyValue<Feature>,
-                            std::vector<KeyValue<Feature> > > min_pq;
-                            // greater<KeyValue<Feature> > > min_pq;
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
+        if(!this->root_ || !feature)
+        {
+            cerr << " KDTree::knn_basic_opt : tree not built or invalid input!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return nbrs;
+        }
+        KDTreeNode* node;
+        // checklist for backtrack use
+        NodeStack check_list;
+        // min-priority queue to keep top k lagrest(reversed order
+        // of distances). The features with largest distances will be
+        // passed to returnd vector.
+        FeatureMaxPQ max_pq;
         double cur_best = numeric_limits<double>::max();
 
         // distance butter
@@ -348,42 +409,220 @@ namespace nnse
             {
 
                 dist = spat::euclidean(node->features[i].data,feature,
-                                       this->dimension_,true);
-                // maintain the bounded min priority queue
-                if(min_pq.size() == k)
+                                       this->dimension_,false);
+                if(dist < cur_best)
                 {
-                    // update current best
-                    if(dist < cur_best)
+                    // maintain the bounded min priority queue
+                    if(max_pq.size() == k)
                     {
-                        // pop the old largest-smallest
-                        min_pq.pop();
-                        min_pq.push(KeyValue<Feature>(node->features[i], dist));
-                        cur_best = min_pq.top().value;
+                        // update current best
+                        // pop the old greatest-smallest
+                        max_pq.pop();
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
                     }
-                }
-                // the special point here is that we need to set best
-                // distance to the distance value of largest smallest
-                // feature
-                else if(min_pq.size() == k-1)
-                {
-                    min_pq.push(KeyValue<Feature>(node->features[i], dist));
-                    cur_best = min_pq.top().value;
-                }
-                else
-                {
-                    min_pq.push(KeyValue<Feature>(node->features[i], dist));
+                    // the special point here is that we need to set best
+                    // distance to the distance value of largest smallest
+                    // feature
+                    else if(max_pq.size() == k-1)
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    else
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                    }
                 }
             }
         }
 
         // finally pass results to returned result
-        const size_t detected = min_pq.size();
+        const size_t detected = max_pq.size();
         for(size_t i = 0; i < detected ; ++i)
         {
-            nbrs.push_back(min_pq.top().key);
-            min_pq.pop();
+            nbrs.push_back(max_pq.top().key);
+            max_pq.pop();
         }
         return nbrs;
     }
+    /**
+     * Basic kd-tree search with optmization on comparison method.
+     * The comparison of distance use a early-stop startegy if current
+     * cumulative squared integral is already over the greatest-smallest
+     * value in the min-priority queue.
+     *
+     * @param feature query feature data in array form
+     *
+     * @return
+     */
+    std::vector<Feature>
+    KDTree::knn_basic_opt(double* feature, size_t k)
+    {
+        // best result buffer
+        vector<Feature> nbrs;
+        nbrs.reserve(k);
+        if(!this->root_ || !feature)
+        {
+            cerr << " KDTree::knn_basic_opt : tree not built or invalid input!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return nbrs;
+        }
+        KDTreeNode* node;
+        // checklist for backtrack use
+        NodeStack check_list;
+        // min-priority queue to keep top k lagrest(reversed order
+        // of distances). The features with largest distances will be
+        // passed to returnd vector.
+        FeatureMaxPQ max_pq;
+
+        double cur_best = numeric_limits<double>::max();
+
+        // distance butter
+        double dist = 0;
+
+        // root for handle
+        check_list.push(this->root_);
+        while(!check_list.empty())
+        {
+            // pop the element
+            node = check_list.top();
+            check_list.pop();
+
+            // check if pitvot dimension comparison can possibly
+            // beat current best distance
+            if(!(abs(node->pivot_val - feature[node->pivot_dim]) < cur_best))
+                continue;
+
+            // find leaf and push unprocessed to stack
+            node = this->traverse_to_leaf(feature,node,check_list);
+            for(size_t i = 0; i < node->n; ++i)
+            {
+
+                if(spat::optimize_compare(node->features[i].data,feature,
+                                          cur_best,this->dimension_,dist))
+                {
+                    // maintain the bounded min priority queue
+                    if(max_pq.size() == k)
+                    {
+
+                        // pop the old greatest-smallest
+                        max_pq.pop();
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    // the special point here is that we need to set best
+                    // distance to the distance value of largest smallest
+                    // feature
+                    else if(max_pq.size() == k-1)
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    else
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                    }
+                }
+            }
+        }
+
+        // finally pass results to returned result
+        const size_t detected = max_pq.size();
+        for(size_t i = 0; i < detected ; ++i)
+        {
+            nbrs.push_back(max_pq.top().key);
+            max_pq.pop();
+        }
+        return nbrs;
+    }
+    /**
+     * Search for approximate k nearest neighbours using the
+     * Best Bin First approach.
+     *
+     * @param feature query feture data in array form
+     * @param k number of nearest neighbour returned
+     * @param max_epoch  maximum of epoch of search
+     *
+     * @return
+     */
+    std::vector<Feature>
+    KDTree::knn_bbf(double* feature, size_t k, size_t max_epoch)
+    {
+        // best result buffer
+        vector<Feature> nbrs;
+        nbrs.reserve(k);
+        if(!this->root_ || !feature)
+        {
+            cerr << " KDTree::knn_basic_opt : tree not built or invalid input!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return nbrs;
+        }
+        size_t epoch = 0;
+        KDTreeNode* node;
+        // checklist for backtrack use
+        NodeMinPQ check_list;
+        // min-priority queue to keep top k lagrest(reversed order
+        // of distances). The features with largest distances will be
+        // passed to returnd vector.
+        FeatureMaxPQ max_pq;
+        double cur_best = numeric_limits<double>::max();
+
+        // distance butter
+        double dist = 0;
+
+        // root for handle
+        check_list.push(NodeBind(this->root_,0));
+        while(!check_list.empty() && epoch < max_epoch)
+        {
+            // pop the element
+            node = check_list.top().key;
+            check_list.pop();
+
+            // find leaf and push unprocessed to stack
+            node = this->traverse_to_leaf(feature,node,check_list);
+            for(size_t i = 0; i < node->n; ++i)
+            {
+
+                dist = spat::euclidean(node->features[i].data,feature,
+                                       this->dimension_,false);
+                if(dist < cur_best)
+                {
+                    // maintain the bounded min priority queue
+                    if(max_pq.size() == k)
+                    {
+                        // update current best
+                        // pop the old greatest-smallest
+                        max_pq.pop();
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    // the special point here is that we need to set best
+                    // distance to the distance value of largest smallest
+                    // feature
+                    else if(max_pq.size() == k-1)
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    else
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                    }
+                }
+            }
+            ++epoch;
+        }
+
+        // finally pass results to returned result
+        const size_t detected = max_pq.size();
+        for(size_t i = 0; i < detected ; ++i)
+        {
+            nbrs.push_back(max_pq.top().key);
+            max_pq.pop();
+        }
+        return nbrs;
+    }
+
 
 }

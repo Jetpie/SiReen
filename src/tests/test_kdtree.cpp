@@ -83,7 +83,7 @@ int main()
         cerr << "break file" << endl;
     size_t n_data = 400000;
     Feature* feats = new Feature[n_data];
-    double* qu;
+    double* qu = NULL;
     while(getline(myfile,line))
     {
 
@@ -129,10 +129,26 @@ int main()
     clock_t start = clock();
     t.build(feats,n_data);
     cout << "time for build:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
-    // t.print_tree();
+    // t.print_trene();
     start = clock();
     vector<Feature> search_result = t.knn_basic(qu,10);
-    cout << "time for search:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
+    cout << "time for knn_basic:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
+    for(size_t i = 0; i < search_result.size(); ++i)
+    {
+        cout << search_result[i].index << endl;
+    }
+
+    start = clock();
+    search_result = t.knn_basic_opt(qu,10);
+    cout << "time for knn_basic_opt:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
+    for(size_t i = 0; i < search_result.size(); ++i)
+    {
+        cout << search_result[i].index << endl;
+    }
+
+    start = clock();
+    search_result = t.knn_bbf(qu,10,5000);
+    cout << "time for knn_bbf:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
     for(size_t i = 0; i < search_result.size(); ++i)
     {
         cout << search_result[i].index << endl;

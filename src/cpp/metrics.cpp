@@ -56,4 +56,20 @@ namespace spat
         }
     }
 
+    bool optimize_compare(const double* x,const double* y, const double target,
+                       const size_t dim, double &dist)
+    {
+        // flush
+        dist = 0.0;
+
+        double tmp = 0;
+        for(size_t i = 0; i < dim ; ++i)
+        {
+            tmp = x[i] - y[i];
+            dist += tmp * tmp;
+            if(dist >= target)
+                return false;
+        }
+        return true;
+    }
 }
