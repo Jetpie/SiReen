@@ -10,7 +10,8 @@
 
 namespace nnse
 {
-    KDTree::KDTree(const size_t dimension): dimension_(dimension){}
+    KDTree::KDTree(const size_t d, const size_t leaf_size):
+        dimension_(d),leaf_size_(leaf_size){}
     KDTree::~KDTree()
     {
         this->release(this->root_);
@@ -102,7 +103,7 @@ namespace nnse
     KDTree::expand_subtree(KDTreeNode* node)
     {
         // check leaf condition for stoping
-        if( node->n == 1 || node->n == 0)
+        if( node->n <= this->leaf_size_)
         {
             node->leaf = true;
             return;
@@ -147,8 +148,8 @@ namespace nnse
         // sanity check for features
         assert(features);
         size_t pivot_dim = 0;
-        float pivot_val, mean, var, x_diff = 0;
-        float var_max = -1.0;
+        double pivot_val, mean, var, x_diff = 0;
+        double var_max = -1.0;
         size_t n = node->n;
 
         // search for the feature dimension with greatest variance
@@ -183,9 +184,9 @@ namespace nnse
         // search for the median value for partition
         // use the user-defined structure KeyValue and std:nth_element
         // with overloaded operator "<" to fast find median
-        vector<KeyValue> order;
+        vector<KeyValue<size_t>> order;
         for( size_t i=0; i < n; ++i)
-            order.push_back(KeyValue(i,features[i].data[pivot_dim]));
+            order.push_back(KeyValue<size_t>(i,features[i].data[pivot_dim]));
 
         // get the median index number
         const size_t k = get_median_index(n);
@@ -259,7 +260,7 @@ namespace nnse
      * @return a leaf node with node.leaf=true
      */
     KDTreeNode*
-    KDTree::traverse_to_leaf(Feature feature, KDTreeNode* node,
+    KDTree::traverse_to_leaf(double* feature, KDTreeNode* node,
                              stack<KDTreeNode*> &node_stack)
     {
         if(!node)
@@ -270,7 +271,7 @@ namespace nnse
 
         }
         KDTreeNode* cur_node = node;
-        float value;
+        double value;
         size_t dim;
 
 
@@ -283,8 +284,8 @@ namespace nnse
             // sanity check for dimension
             assert(dim < this->dimension_);
 
-            // go left child
-            if(feature.data[dim] <= value)
+            // go to a child and preserve the other
+            if(feature[dim] <= value)
             {
                 node_stack.push(cur_node->right);
                 cur_node = cur_node->left;
@@ -304,61 +305,85 @@ namespace nnse
      * First, traverse from root node to a leaf node and. Second,
      * backtrack to search for better node
      *
-     * @param feature query Feature
+     * @param feature query feature data in array form
      *
      * @return
      */
-    Feature
-    KDTree::knn_search_basic(Feature feature)
+    std::vector<Feature>
+    KDTree::knn_basic(double* feature, size_t k)
     {
         KDTreeNode* node;
         // checklist for backtrack use
         stack<KDTreeNode*> check_list;
+        // min-priority queue to keep top k lagrest(reversed order
+        // of distances). The features with largest distances will be
+        // passed to returnd vector.
+        std::priority_queue<KeyValue<Feature>,
+                            std::vector<KeyValue<Feature> > > min_pq;
+                            // greater<KeyValue<Feature> > > min_pq;
+        // best result buffer
+        vector<Feature> nbrs;
+        nbrs.reserve(k);
+        double cur_best = numeric_limits<double>::max();
 
-        // best results
-        Feature closest;
-        float cur_best = numeric_limits<float>::max();
+        // distance butter
+        double dist = 0;
 
-        float dist = 0;
+        // root for handle
         check_list.push(this->root_);
-
-        // node = check_list.top();
-        // check_list.pop();
-        // cout << check_list.size() << endl;
-
-        // // find leaf and push unprocessed to stack
-        // node = this->traverse_to_leaf(feature,node,check_list);
-        // cout << check_list.size() << endl;
-
-        // closest = node->features[0];
-
         while(!check_list.empty())
         {
             // pop the element
             node = check_list.top();
             check_list.pop();
-            cout << check_list.size() << endl;
-            // check if pitvot dimension comparison can beat current
-            // best distance
-            if(!(abs(node->pivot_val - feature.data[node->pivot_dim]) < cur_best))
+
+            // check if pitvot dimension comparison can possibly
+            // beat current best distance
+            if(!(abs(node->pivot_val - feature[node->pivot_dim]) < cur_best))
                 continue;
 
             // find leaf and push unprocessed to stack
             node = this->traverse_to_leaf(feature,node,check_list);
-
             for(size_t i = 0; i < node->n; ++i)
             {
-                dist = spat::euclidean(node->features[i].data,feature.data,
-                                       this->dimension_);
-                // update current best
-                if(dist < cur_best)
+
+                dist = spat::euclidean(node->features[i].data,feature,
+                                       this->dimension_,true);
+                // maintain the bounded min priority queue
+                if(min_pq.size() == k)
                 {
-                    closest = node->features[i];
-                    cur_best = dist;
+                    // update current best
+                    if(dist < cur_best)
+                    {
+                        // pop the old largest-smallest
+                        min_pq.pop();
+                        min_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = min_pq.top().value;
+                    }
+                }
+                // the special point here is that we need to set best
+                // distance to the distance value of largest smallest
+                // feature
+                else if(min_pq.size() == k-1)
+                {
+                    min_pq.push(KeyValue<Feature>(node->features[i], dist));
+                    cur_best = min_pq.top().value;
+                }
+                else
+                {
+                    min_pq.push(KeyValue<Feature>(node->features[i], dist));
                 }
             }
         }
-        return closest;
+
+        // finally pass results to returned result
+        const size_t detected = min_pq.size();
+        for(size_t i = 0; i < detected ; ++i)
+        {
+            nbrs.push_back(min_pq.top().key);
+            min_pq.pop();
+        }
+        return nbrs;
     }
 
 }

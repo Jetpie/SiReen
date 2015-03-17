@@ -1,5 +1,7 @@
 #include "sireen/nearest_neighbour.hpp"
 #include "sireen/metrics.hpp"
+#include "sireen/file_utility.hpp"
+#include <ctime>
 using namespace std;
 using namespace nnse;
 
@@ -7,32 +9,28 @@ using namespace nnse;
 int main()
 {
     Feature* features = new Feature[6];
-    float p[2] = {2.0,3.0};
-    features[0] = {p,2};
-    float p1[2] = {5.0,4.0};
-    features[1] = {p1,2};
-    float p2[2] = {9.0,6.0};
-    features[2] = {p2,2};
-    float p3[2] = {4.0,7.0};
-    features[3] = {p3,2};
-    float p4[2] = {8.0,1.0};
-    features[4] = {p4,2};
-    float p5[2] = {7.0,2.0};
-    features[5] = {p5, 2};
+    double p[2] = {2.0,3.0};
+    features[0] = {p,2,0};
+    double p1[2] = {5.0,4.0};
+    features[1] = {p1,2,1};
+    double p2[2] = {9.0,6.0};
+    features[2] = {p2,2,2};
+    double p3[2] = {4.0,7.0};
+    features[3] = {p3,2,3};
+    double p4[2] = {8.0,1.0};
+    features[4] = {p4,2,4};
+    double p5[2] = {7.0,2.0};
+    features[5] = {p5, 2,5};
 
-    Feature t;
-    t = features[5];
-    cout << "[" <<t.data[0] <<"," <<t.data[1] << "]" << endl;
-    cout << "[" <<features[5].data[0] <<"," <<features[5].data[1] << "]" << endl;
+
     for(size_t i = 0; i < 6 ;++i)
     {
         cout << "[" << features[i].data[0] <<"," <<features[i].data[1] << "]";
     }
     cout << endl;
+
     const size_t dim = 2;
-
-
-    nnse::KDTree kdtree(dim);
+    nnse::KDTree kdtree(dim,1);
     kdtree.build(features,6);
     for(size_t i = 0; i < 6 ;++i)
     {
@@ -43,69 +41,108 @@ int main()
 
     cout << "euclidean test: " <<  spat::euclidean(p2,p1,2) << endl;
     cout << "cosine test: " <<  spat::cosine(p2,p1,2) << endl;
-    float q[2] = {2.1,3.1};
-
-    Feature close = kdtree.knn_search_basic({q,2});
-    cout << "[" <<close.data[0] <<"," <<close.data[1] << "]";
-
+    double q[2] = {6.9,4.0};
+    std::vector<Feature> nbrs = kdtree.knn_basic(q,6);
+    size_t nnb = nbrs.size();
+    cout <<"nnb" << nnb<<endl;
+    for(size_t i = 0;i < nnb ; ++i)
+    {
+        cout << "[" <<nbrs[nnb-i-1].data[0] <<"," <<nbrs[nnb-i-1].data[1] << "]" << endl;
+    }
 
 
     delete [] features;
-    // cout << "***std::nth_element Test***" << endl;
-    // float a[] = {7.0,3.0,5.0,4.0,2.0,6.0,1,0};
-    // vector<nnse::KeyValue> v;
-    // for(size_t i = 0; i< 7 ;++i)
-    // {
-    //     v.push_back(nnse::KeyValue(i,a[i]));
-    // }
-    // std::nth_element(v.begin(), v.begin() + v.size()/2,v.end());
-    // for(size_t i = 0; i< 7 ;++i)
-    // {
-    //     cout << v[i].value << " ";
-    // }
-    // cout << endl;
-    // for(size_t i = 0; i< 7 ;++i)
-    // {
-    //     cout << v[i].key << " ";
-    // }
-    // cout << endl;
-    // cout << "median: " << v[v.size()/2].value << endl;
-    // cout << "***std::nth_element Test***" << endl;
 
-    // float tmp;
-    // size_t d,i_src,cnt=0;
-    // for(size_t df=0; df<7;++df)
-    // {
-    //     i_src = v[df].key;
-    //     if(i_src == df)
-    //         continue;
-    //     d = df;
-    //     tmp = a[d];
-    //     do
-    //     {
-    //         a[d]  =a[i_src];
-    //         v[d].key = d;
+    std::priority_queue<int,std::vector<int> ,greater<int> > pq;
+    pq.push(1);
+    pq.push(5);
+    pq.push(3);
+    pq.push(2);
+    cout << pq.top() << endl;
+    pq.push(2.5);
+    cout << pq.top() << endl;
+    for(size_t i = 0;i < 4 ; ++i)
+    {
+        cout << pq.top() << endl;
+        pq.pop();
+    }
+    vector<int> list;
+    list.reserve(3);
+    list[0] = 1;
+    list[1] = 2;
+    list[4] = 5;
+    cout << list[3] << list[4] << endl;
 
-    //         d = i_src;
-    //         i_src = v[i_src].key;
-    //         cnt++;
-    //         for(size_t i=0; i< 7; ++i)
-    //         {
-    //             cout << a[i] << " ";
-    //         }
-    //         cout << endl;
+    string file_name = "/home/bingqingqu/TAOCP/Subversion/search-by-image-svn/res/data/test40w.txt";
+    string line;
+    string data_buf;
+    vector<string> result;
+    ifstream myfile(file_name);
+    int cnt = 0;
+    if(!myfile.is_open())
+        cerr << "break file" << endl;
+    size_t n_data = 400000;
+    Feature* feats = new Feature[n_data];
+    double* qu;
+    while(getline(myfile,line))
+    {
 
-    //     }
-    //     while(i_src != df);
-    //     a[d]  = tmp;
-    //     v[d].key  = d;
+        futil::spliter_c(line.c_str(),'\t',result);
+        data_buf = result[6];
+        result.clear();
 
-    // }
-    // for(size_t i=0; i< 7; ++i)
-    // {
-    //     cout << a[i] << " ";
-    // }
-    // cout << endl;
-    // cout << "number of swap:"  << cnt << endl;
+        futil::spliter_c(data_buf.c_str(),',',result);
+        double* temp = new double[500];
+        for(size_t i=0; i<500; ++i)
+        {
+
+            temp[i] = atof(result[i].c_str());
+        }
+        Feature f(temp,500,cnt);
+        if( cnt == 0)
+        {
+            qu = temp;
+        }
+        feats[cnt] = f;
+        result.clear();
+        // cout << "temp" << feats[0].data[150]  << endl;
+
+        cnt++;
+    }
+    myfile.close();
+    for(size_t i = 0 ; i < 500 ; ++i)
+    {
+        cout << feats[0].data[i] <<",";
+    }
+    cout << endl;
+    for(size_t i = 0 ; i < 500 ; ++i)
+    {
+        cout << feats[100].data[i] <<",";
+    }
+    cout << endl;
+    cout << feats[5].index<<endl;
+    cout << spat::cosine(feats[0].data,feats[116073].data,500,true)<<endl;
+    cout << spat::cosine(feats[0].data,feats[140922].data,500,true)<<endl;
+    cout << spat::cosine(feats[0].data,feats[128786].data,500,true)<<endl;
+    cout << spat::cosine(feats[0].data,feats[82475].data,500,true)<<endl;
+    KDTree t(500);
+    clock_t start = clock();
+    t.build(feats,n_data);
+    cout << "time for build:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
+    // t.print_tree();
+    start = clock();
+    vector<Feature> search_result = t.knn_basic(qu,10);
+    cout << "time for search:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
+    for(size_t i = 0; i < search_result.size(); ++i)
+    {
+        cout << search_result[i].index << endl;
+    }
+
+
+    for(size_t i = 0; i < n_data; ++i)
+    {
+        delete [] feats[i].data;
+    }
+    delete [] feats;
 
 }

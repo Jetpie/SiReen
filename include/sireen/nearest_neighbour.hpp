@@ -9,16 +9,19 @@
 #ifndef SIREEN_NEAREST_NEIGHBOUR_H_
 #define SIREEN_NEAREST_NEIGHBOUR_H_
 
+// STL
 #include <vector>
 #include <iostream>
-#include <string.h>
 #include <algorithm>
-#include <assert.h>
 #include <iomanip>
-#include <math.h>
 #include <stack>
 #include <queue>
 #include <limits>
+
+#include <string.h>
+#include <assert.h>
+#include <math.h>
+
 #include "sireen/metrics.hpp"
 //#define NDEBUG
 using namespace std;
@@ -28,15 +31,20 @@ namespace nnse
 {
     /// key value pair. Not use the std::pair because there is default
     /// "<" operator overloading for it and it is too heavy for operation.
+    template <class T>
     struct KeyValue
     {
-        size_t key;
-        float value;
-        KeyValue(const size_t k, const float v) : key(k), value(v){}
+        T key;
+        double value;
+        KeyValue(const T k, const double v) : key(k), value(v){}
     };
     // Operator overloading
-    inline bool operator<(const KeyValue& lhs, const KeyValue& rhs)
+    template <class T>
+    inline bool operator<(const KeyValue<T>& lhs, const KeyValue<T>& rhs)
     {return lhs.value < rhs.value; }
+    template <class T>
+    inline bool operator>(const KeyValue<T>& lhs, const KeyValue<T>& rhs)
+    {return lhs.value > rhs.value; }
 
     // compute median position of a group of index
     inline size_t get_median_index(const size_t x)
@@ -50,25 +58,30 @@ namespace nnse
     struct Feature
     {
         /** feature data */
-        float* data;
+        double* data;
         /** feature dimension */
         size_t dimension;
-        Feature(float* data, const size_t dim) : data(data) , dimension(dim) {}
+        /** feature index */
+        size_t index;
+        Feature(double* data, const size_t dim, const size_t i) :
+            data(data) , dimension(dim), index(i) {}
         Feature() : data(),dimension(){}
         Feature& operator=(Feature other)
         {
             std::swap(data,other.data);
             std::swap(dimension,other.dimension);
+            std::swap(index,other.index);
             return *this;
         }
     };
+
     /// Node definitions for kd-tree
     struct KDTreeNode
     {
         /** feature dimension for partition */
         int pivot_dim;
         /** key value for partition */
-        float pivot_val;
+        double pivot_val;
         /** leaf flag */
         bool leaf;
         /** all features at current node */
@@ -79,6 +92,7 @@ namespace nnse
         KDTreeNode* left;
         /** right child */
         KDTreeNode* right;
+
         // DEBUG
         void print()
         {
@@ -98,10 +112,17 @@ namespace nnse
     };
 
     ///
-    /// Todo: add descriptions for KDTree
+    /// KDTree data structure for fast nearest feature searching.
+    /// Parameters can be adjust are feature dimension and number of
+    /// features in leaf node.
     ///
-    ///
-    ///
+    /// Usage:
+    ///     KDTree kdtree(500,30); // 30 is default value for leaf size
+    ///     // features is pointer to Feature array
+    ///     // 300 is number of features to build the kd-tree
+    ///     kdtree.build(features, 300);
+    ///     // 5 is to get top 5 closest features
+    ///     kdtree.knn_basic(feature, 5);
     class KDTree
     {
     private:
@@ -109,7 +130,12 @@ namespace nnse
         KDTreeNode* root_;
         /** kd-tree feature dimension */
         size_t dimension_;
-
+        /**
+         * kd-tree leaf node number of points
+         * Default leaf size is 30. Larger leaf size can achieve a
+         * better search result but more closer to brute-force search.
+         */
+        size_t leaf_size_;
         /**
          * initialization of a subtree
          *
@@ -145,10 +171,21 @@ namespace nnse
          *
          */
         void partition(KDTreeNode*);
+        /**
+         * Traverse a kd-tree to a leaf node. Path decision are made
+         * by comparision of values between the input feature and node
+         * on the node's partition dimension.
+         *
+         * @param feature a input feature
+         * @param node a start node
+         *
+         * @return a leaf node with node.leaf=true
+         */
+        KDTreeNode* traverse_to_leaf(double* ,KDTreeNode*, stack<KDTreeNode*>&);
 
     public:
         /** Constructor */
-        KDTree(const size_t);
+        KDTree(const size_t, const size_t leaf_size = 30);
         /** Destructor */
         ~KDTree();
         /**
@@ -169,8 +206,8 @@ namespace nnse
          *
          *
          */
-        void knn_search_bbf(float* );
-        void knn_search_brute_force(float*);
+        void knn_bbf(double* );
+        void knn_brute_force(double*);
 
         /**
          * Basic k-nearest-neighbour search method use for kd-tree.
@@ -181,28 +218,16 @@ namespace nnse
          *
          * @return
          */
-        Feature knn_search_basic(Feature feature);
+        std::vector<Feature> knn_basic(double*, size_t);
 
-        /**
-         * Traverse a kd-tree to a leaf node. Path decision are made
-         * by comparision of values between the input feature and node
-         * on the node's partition dimension.
-         *
-         * @param feature a input feature
-         * @param node a start node
-         *
-         * @return a leaf node with node.leaf=true
-         */
-        KDTreeNode* traverse_to_leaf(Feature ,KDTreeNode*, stack<KDTreeNode*>&);
+
 
 
 
         // DEBUG
         void print_tree()
         {
-
             this->print_node(this->root_);
-
         };
         void print_node(KDTreeNode* node,int indent=0)
         {
@@ -215,9 +240,6 @@ namespace nnse
                 {
                     cout << setw(indent) << ' ';
                 }
-                // size_t k = get_median_index(node->n);
-                // cout <<"(" << node->features[k].data[0] << ","
-                //      << node->features[k].data[1] << ")\n";
                 cout <<"(" << node->pivot_dim << ","
                      << node->pivot_val <<","
                      << node->n << ")\n";

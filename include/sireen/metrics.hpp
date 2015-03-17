@@ -18,11 +18,11 @@ namespace spat
 {
 
     // should be very clear
-    float cosine(const float* x,const float* y, const size_t dim,
+    double cosine(const double* x,const double* y, const size_t dim,
                  const bool normalized=false);
     // use a trick for euclidean(x,y) = 2 - cosine_similarity if
     // input vectors are normalized
-    float euclidean(const float* x,const float* y, const size_t dim,
+    double euclidean(const double* x,const double* y, const size_t dim,
                     const bool normalized = false);
 }
 #endif
