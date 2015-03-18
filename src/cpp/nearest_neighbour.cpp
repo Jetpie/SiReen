@@ -1,7 +1,12 @@
 // Optimized c++ general construction and searching functions for
 // KD-Tree. This implementation has following features:
-// 1. Fixed memory usage for constucting tree with features.
-// 2. Optimized distance comparison for seach
+//
+// 1. Fixed memory usage for constucting kd-tree with features pointers.
+// 2. Optimized distance comparison for ordinary kd-tree search.
+//    The speed improved from ~0.13s to ~0.08s for 500,000 data (500D)
+// 3. Best-Bin-Fisrt search method provide an approximate nearest
+//    neighbour search. The max-epoch parameter can control the precision
+//    as well as the time performance.
 //
 // @author: Bingqing Qu
 //

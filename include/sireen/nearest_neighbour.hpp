@@ -1,13 +1,18 @@
 // Optimized c++ general construction and searching functions for
 // KD-Tree. This implementation has following features:
-// 1. Fixed memory usage for constucting tree with features.
-// 2. Optimized distance comparison for seach
+//
+// 1. Fixed memory usage for constucting kd-tree with features pointers.
+// 2. Optimized distance comparison for ordinary kd-tree search.
+//    The speed improved from ~0.13s to ~0.08s for 500,000 data (500D)
+// 3. Best-Bin-Fisrt search method provide an approximate nearest
+//    neighbour search. The max-epoch parameter can control the precision
+//    as well as the time performance.
 //
 // @author: Bingqing Qu
 //
 // Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
 //
-// @license: See LICENSE at root directory#ifndef SIREEN_NEAREST_NEIGHBOUR_H_
+// @license: See LICENSE at root directory
 #ifndef SIREEN_NEAREST_NEIGHBOUR_H_
 #define SIREEN_NEAREST_NEIGHBOUR_H_
 
@@ -125,9 +130,16 @@ namespace nnse
         /**
          * kd-tree leaf node number of points
          * Default leaf size is 30. Larger leaf size can achieve a
-         * better search result but more closer to brute-force search.
+         * better search result but more closer to brute-force search,
+         * i.e. bad searching time.
          */
         size_t leaf_size_;
+        /**
+         * Release all the allocated memories
+         *
+         * @param a tree node
+         */
+        void release(KDTreeNode* );
         /**
          * initialization of a subtree
          *
@@ -193,12 +205,6 @@ namespace nnse
         KDTree(const size_t, const size_t leaf_size = 30);
         /** Destructor */
         ~KDTree();
-        /**
-         * Release all the allocated memories
-         *
-         * @param a tree node
-         */
-        void release(KDTreeNode* );
         /**
          * build the kd-tree structure from input features
          *
