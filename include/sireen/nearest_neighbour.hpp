@@ -117,7 +117,10 @@ namespace nnse
     class KDTree
     {
     private:
-        // typedef for shorter written
+        // typedef to avoid ugly long declaration
+        // smart pointer for safty. I am still exploring the security of
+        // such using.
+        typedef shared_ptr<KDTreeNode> NodePtr;
         typedef stack<KDTreeNode*> NodeStack;
         typedef KeyValue<KDTreeNode*> NodeBind;
         typedef priority_queue<NodeBind, vector<NodeBind>, greater<NodeBind> > NodeMinPQ;
@@ -219,17 +222,19 @@ namespace nnse
          * backtrack to search for better node
          *
          * @param feature query Feature
+         * @param k       number of nearest neighbour returned
          *
          * @return
          */
         std::vector<Feature> knn_basic(double*, size_t);
         /**
          * Basic kd-tree search with optmization on comparison method.
-         * The comparison of distance use a early-stop startegy if current
+         * The comparison of distance use an early-stop strategy if current
          * cumulative squared integral is already over the greatest-smallest
-         * value in the min-priority queue.
+         * value in the max-priority queue.
          *
          * @param feature query feature data in array form
+         * @param k       number of nearest neighbour returned
          *
          * @return
          */
@@ -245,6 +250,17 @@ namespace nnse
          * @return
          */
         std::vector<Feature> knn_bbf(double*, size_t, size_t);
+        /**
+         * Search for approximate k nearest neighbours using the
+         * Best Bin First approach. Distance comparison applied an
+         * early-stop strategy.
+         *
+         * @param feature    query feture data in array form
+         * @param k          number of nearest neighbour returned
+         * @param max_epoch  maximum of epoch of search
+         *
+         * @return
+         */
         std::vector<Feature> knn_bbf_opt(double*, size_t, size_t);
 
         // DEBUG

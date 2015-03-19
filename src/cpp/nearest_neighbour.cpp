@@ -368,6 +368,7 @@ namespace nnse
      * backtrack to search for better node
      *
      * @param feature query feature data in array form
+     * @param k       number of nearest neighbour returned
      *
      * @return
      */
@@ -455,9 +456,10 @@ namespace nnse
      * Basic kd-tree search with optmization on comparison method.
      * The comparison of distance use a early-stop startegy if current
      * cumulative squared integral is already over the greatest-smallest
-     * value in the min-priority queue.
+     * value in the max-priority queue.
      *
      * @param feature query feature data in array form
+     * @param k       number of nearest neighbour returned
      *
      * @return
      */
@@ -628,6 +630,95 @@ namespace nnse
         }
         return nbrs;
     }
+    /**
+     * Search for approximate k nearest neighbours using the
+     * Best Bin First approach. Distance comparison applied an
+     * early-stop strategy.
+     *
+     * @param feature    query feture data in array form
+     * @param k          number of nearest neighbour returned
+     * @param max_epoch  maximum of epoch of search
+     *
+     * @return
+     */
+    std::vector<Feature>
+    KDTree::knn_bbf_opt(double* feature, size_t k, size_t max_epoch)
+    {
+        // best result buffer
+        vector<Feature> nbrs;
+        nbrs.reserve(k);
+        if(!this->root_ || !feature)
+        {
+            cerr << " KDTree::knn_basic_opt : tree not built or invalid input!"
+                 <<__FILE__<<","<<__LINE__ <<endl;
+            return nbrs;
+        }
+        size_t epoch = 0;
+        KDTreeNode* node;
+        // checklist for backtrack use
+        NodeMinPQ check_list;
+        // min-priority queue to keep top k lagrest(reversed order
+        // of distances). The features with largest distances will be
+        // passed to returnd vector.
+        FeatureMaxPQ max_pq;
+
+        double cur_best = numeric_limits<double>::max();
+
+        // distance butter
+        double dist = 0;
+
+        // root for handle
+        check_list.push(NodeBind(this->root_,0));
+        while(!check_list.empty() && epoch < max_epoch)
+        {
+            // pop the element
+            node = check_list.top().key;
+            check_list.pop();
+
+            // find leaf and push unprocessed to stack
+            node = this->traverse_to_leaf(feature,node,check_list);
+            for(size_t i = 0; i < node->n; ++i)
+            {
+
+                if(spat::optimize_compare(node->features[i].data,feature,
+                                          cur_best,this->dimension_,dist))
+                {
+                    // maintain the bounded min priority queue
+                    if(max_pq.size() == k)
+                    {
+
+                        // pop the old greatest-smallest
+                        max_pq.pop();
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    // the special point here is that we need to set best
+                    // distance to the distance value of largest smallest
+                    // feature
+                    else if(max_pq.size() == k-1)
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                        cur_best = max_pq.top().value;
+                    }
+                    else
+                    {
+                        max_pq.push(KeyValue<Feature>(node->features[i], dist));
+                    }
+                }
+            }
+            ++epoch;
+        }
+
+        // finally pass results to returned result
+        const size_t detected = max_pq.size();
+        for(size_t i = 0; i < detected ; ++i)
+        {
+            nbrs.push_back(max_pq.top().key);
+            max_pq.pop();
+        }
+        return nbrs;
+    }
+
 
 
 }

@@ -154,6 +154,14 @@ int main()
         cout << search_result[i].index << endl;
     }
 
+    start = clock();
+    search_result = t.knn_bbf_opt(qu,10,5000);
+    cout << "time for knn_bbf_opt:" << double(clock() -start)/CLOCKS_PER_SEC << endl;
+    for(size_t i = 0; i < search_result.size(); ++i)
+    {
+        cout << search_result[i].index << endl;
+    }
+
 
     for(size_t i = 0; i < n_data; ++i)
     {
