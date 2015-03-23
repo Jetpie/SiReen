@@ -9,6 +9,7 @@
 //    as well as the time performance.
 //
 // @author: Bingqing Qu
+// @version 0.1.0
 //
 // Copyright (C) 2014-2015  Bingqing Qu <sylar.qu@gmail.com>
 //
