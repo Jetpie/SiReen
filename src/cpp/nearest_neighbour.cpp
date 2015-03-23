@@ -43,7 +43,10 @@ namespace nnse
     // }
 
     /**
-     * build the kd-tree structure from input features
+     * build the kd-tree structure from input features. The order is
+     * building the node for indexing first and point the root node
+     * to that built node. This is best design for multi-threading
+     * building
      *
      * @param features an array of features
      * @param n        number of features
@@ -60,12 +63,13 @@ namespace nnse
             return;
         }
         // init
-        this->root_ = this->init_node(features, n);
+        NodePtr building= this->init_node(features, n);
         // sanity check for initialized root
-        assert(this->root_);
+        assert(building);
         // expand
-        this->expand_subtree(this->root_);
+        this->expand_subtree(building);
 
+        this->root_ = building;
     }
 
     /**

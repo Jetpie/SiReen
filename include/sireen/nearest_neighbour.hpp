@@ -214,7 +214,10 @@ namespace nnse
         /** Destructor */
         ~KDTree();
         /**
-         * build the kd-tree structure from input features
+         * build the kd-tree structure from input features. The order is
+         * building the node for indexing first and point the root node
+         * to that built node. This is best design for multi-threading
+         * building
          *
          * @param features an array of features
          * @param n        number of features
