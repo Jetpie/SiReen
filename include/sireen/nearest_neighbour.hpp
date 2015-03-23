@@ -24,6 +24,7 @@
 #include <stack>
 #include <queue>
 #include <limits>
+#include <memory>
 
 #include <string.h>
 #include <assert.h>
@@ -96,9 +97,9 @@ namespace nnse
         /** number of features */
         size_t n;
         /** left child */
-        KDTreeNode* left;
+        shared_ptr<KDTreeNode> left;
         /** right child */
-        KDTreeNode* right;
+        shared_ptr<KDTreeNode> right;
 
     };
 
@@ -117,17 +118,17 @@ namespace nnse
     class KDTree
     {
     private:
-        // typedef to avoid ugly long declaration
         // smart pointer for safty. I am still exploring the security of
         // such using.
         typedef shared_ptr<KDTreeNode> NodePtr;
-        typedef stack<KDTreeNode*> NodeStack;
-        typedef KeyValue<KDTreeNode*> NodeBind;
+        // typedef to avoid ugly long declaration
+        typedef stack<NodePtr> NodeStack;
+        typedef KeyValue<NodePtr> NodeBind;
         typedef priority_queue<NodeBind, vector<NodeBind>, greater<NodeBind> > NodeMinPQ;
         typedef KeyValue<Feature> FeatureBind;
         typedef priority_queue<FeatureBind, vector<FeatureBind> > FeatureMaxPQ;
         /** kd-tree root node */
-        KDTreeNode* root_;
+        NodePtr root_;
         /** kd-tree feature dimension */
         size_t dimension_;
         /**
@@ -137,25 +138,28 @@ namespace nnse
          * i.e. bad searching time.
          */
         size_t leaf_size_;
-        /**
-         * Release all the allocated memories
-         *
-         * @param a tree node
-         */
-        void release(KDTreeNode* );
+
+        // /**
+        //  * Release all the allocated memories
+        //  *
+        //  * @param a tree node
+        //  * @deperated because smart pointer for node class applied
+        //  */
+        // void release(NodePtr);
+
         /**
          * initialization of a subtree
          *
          * @param features an array of features
          * @param n        number of features
          */
-        KDTreeNode* init_node(Feature *, const size_t);
+        NodePtr init_node(Feature *, const size_t);
         /**
          * expand kd-tree after root node is initialized
          *
          * @param node current kd-tree node
          */
-        void expand_subtree(KDTreeNode*);
+        void expand_subtree(NodePtr);
         /**
          * Partition features on the current node. Two parts:
          *
@@ -177,7 +181,7 @@ namespace nnse
          * @param node the current node
          *
          */
-        void partition(KDTreeNode*);
+        void partition(NodePtr);
         /**
          * Traverse a kd-tree to a leaf node. Path decision are made
          * by comparision of values between the input feature and node
@@ -189,7 +193,7 @@ namespace nnse
          *
          * @return a leaf node with node.leaf=true
          */
-        KDTreeNode* traverse_to_leaf(double*, KDTreeNode*, NodeStack&);
+        NodePtr traverse_to_leaf(double*, NodePtr, NodeStack&);
         /**
          * Traverse a kd-tree to a leaf node. Path decision are made
          * by comparision of values between the input feature and node
@@ -201,7 +205,7 @@ namespace nnse
          *
          * @return a leaf node with node.leaf=true
          */
-        KDTreeNode* traverse_to_leaf(double*, KDTreeNode*, NodeMinPQ&);
+        NodePtr traverse_to_leaf(double*, NodePtr, NodeMinPQ&);
 
     public:
         /** Constructor */
@@ -269,7 +273,7 @@ namespace nnse
         {
             this->print_node(this->root_);
         };
-        void print_node(KDTreeNode* node,int indent=0)
+        void print_node(NodePtr node,int indent=0)
         {
             if(node != NULL)
             {

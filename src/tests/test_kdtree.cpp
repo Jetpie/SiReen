@@ -8,6 +8,7 @@ using namespace nnse;
 
 int main()
 {
+
     Feature* features = new Feature[6];
     double p[2] = {2.0,3.0};
     features[0] = {p,2,0};
@@ -168,5 +169,23 @@ int main()
         delete [] feats[i].data;
     }
     delete [] feats;
+
+    // // array test
+    // Feature* arr_test  = new Feature[10];
+    // for(int i = 0; i < 10 ; ++i)
+    // {
+    //     double *tp = new double[2];
+    //     tp[0] = double(i);
+    //     tp[1] = double(i)*2;
+    //     arr_test[i] = {tp, 2, i};
+    //     cout << tp << endl;
+    //     cout << arr_test[0].data << endl;
+    //     cout << arr_test[0].data[0] << "," << arr_test[0].data[1] << endl;
+    // }
+    // for(size_t i = 0; i < 10; ++i)
+    // {
+    //     delete [] arr_test[i].data;
+    // }
+    // delete [] arr_test;
 
 }

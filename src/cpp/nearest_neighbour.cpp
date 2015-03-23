@@ -21,20 +21,26 @@ namespace nnse
         dimension_(d),leaf_size_(leaf_size){}
     KDTree::~KDTree()
     {
-        this->release(this->root_);
+        cout << "report use_count:" << this->root_.use_count() << endl;
+        // this->release(this->root_);
     }
-    /**
-     * Release all the allocated memories
-     */
-    void
-    KDTree::release(KDTreeNode* node)
-    {
-        if(!node)
-            return;
-        this->release(node->left);
-        this->release(node->right);
-        delete node;
-    }
+
+    // /**
+    //  * Release all the allocated memories
+    //  *
+    //  * @param a tree node
+    //  * @deperated because smart pointer for node class applied
+    //  */
+    // void
+    // KDTree::release(KDTreeNode* node)
+    // {
+    //     if(!node)
+    //         return;
+    //     this->release(node->left);
+    //     this->release(node->right);
+    //     delete node;
+    // }
+
     /**
      * build the kd-tree structure from input features
      *
@@ -72,11 +78,11 @@ namespace nnse
      * @return initialized kd-tree node, furthor expand should be
      *         followed
      */
-    KDTreeNode*
+    KDTree::NodePtr
     KDTree::init_node(Feature* features, const size_t n)
     {
         // dynamic allocate root node
-        KDTreeNode* node = new KDTreeNode;
+        NodePtr node = std::make_shared<KDTreeNode>();
         if(!node)
         {
             cerr << " KDTree::init_node : memory allocation to KDTreeNode fail!"
@@ -107,7 +113,7 @@ namespace nnse
      * @param node current kd-tree node
      */
     void
-    KDTree::expand_subtree(KDTreeNode* node)
+    KDTree::expand_subtree(NodePtr node)
     {
         // check leaf condition for stoping
         if( node->n <= this->leaf_size_)
@@ -146,7 +152,7 @@ namespace nnse
      *
      */
     void
-    KDTree::partition(KDTreeNode* node)
+    KDTree::partition(NodePtr node)
     {
         // ***1 DETERMINE THE PIVOT DIMENSION AND FEATURE***
 
@@ -267,8 +273,8 @@ namespace nnse
      *
      * @return a leaf node with node.leaf=true
      */
-    KDTreeNode*
-    KDTree::traverse_to_leaf(double* feature,KDTreeNode* node, NodeStack& container)
+    KDTree::NodePtr
+    KDTree::traverse_to_leaf(double* feature,NodePtr node, NodeStack& container)
     {
         if(!node)
         {
@@ -277,8 +283,8 @@ namespace nnse
             return NULL;
 
         }
-        KDTreeNode* other;
-        KDTreeNode* cur_node = node;
+        NodePtr other;
+        NodePtr cur_node = node;
         double value;
         size_t dim;
 
@@ -319,8 +325,8 @@ namespace nnse
      *
      * @return a leaf node with node.leaf=true
      */
-    KDTreeNode*
-    KDTree::traverse_to_leaf(double* feature,KDTreeNode* node, NodeMinPQ& container)
+    KDTree::NodePtr
+    KDTree::traverse_to_leaf(double* feature,NodePtr node, NodeMinPQ& container)
     {
         if(!node)
         {
@@ -329,8 +335,8 @@ namespace nnse
             return NULL;
 
         }
-        KDTreeNode* other;
-        KDTreeNode* cur_node = node;
+        NodePtr other;
+        NodePtr cur_node = node;
         double value;
         size_t dim;
 
@@ -384,7 +390,7 @@ namespace nnse
                  <<__FILE__<<","<<__LINE__ <<endl;
             return nbrs;
         }
-        KDTreeNode* node;
+        NodePtr node;
         // checklist for backtrack use
         NodeStack check_list;
         // min-priority queue to keep top k lagrest(reversed order
@@ -475,7 +481,7 @@ namespace nnse
                  <<__FILE__<<","<<__LINE__ <<endl;
             return nbrs;
         }
-        KDTreeNode* node;
+        NodePtr node;
         // checklist for backtrack use
         NodeStack check_list;
         // min-priority queue to keep top k lagrest(reversed order
@@ -566,7 +572,7 @@ namespace nnse
             return nbrs;
         }
         size_t epoch = 0;
-        KDTreeNode* node;
+        NodePtr node;
         // checklist for backtrack use
         NodeMinPQ check_list;
         // min-priority queue to keep top k lagrest(reversed order
@@ -654,7 +660,7 @@ namespace nnse
             return nbrs;
         }
         size_t epoch = 0;
-        KDTreeNode* node;
+        NodePtr node;
         // checklist for backtrack use
         NodeMinPQ check_list;
         // min-priority queue to keep top k lagrest(reversed order
