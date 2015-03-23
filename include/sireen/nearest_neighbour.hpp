@@ -132,6 +132,14 @@ namespace nnse
         typedef priority_queue<NodeBind, vector<NodeBind>, greater<NodeBind> > NodeMinPQ;
         typedef KeyValue<Feature> FeatureBind;
         typedef priority_queue<FeatureBind, vector<FeatureBind> > FeatureMaxPQ;
+
+        // Read and Write Lock in terms of boost thread implementation
+        typedef boost::shared_mutex Lock;
+        typedef boost::unique_lock<Lock> WriteLock;
+        typedef boost::shared_lock<Lock> ReadLock;
+        // define mutex lock
+        Lock access_;
+
         /** kd-tree root node */
         NodePtr root_;
         /** kd-tree feature dimension */

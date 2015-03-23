@@ -16,7 +16,8 @@ EIGENROOT ?= /home/bingqingqu/user-libs/eigen-3.2.4
 BIN_CFLAGS := $(CFLAGS) -g -Wall -std=c++0x -O3 \
 				-I$(VLROOT) -I$(EIGENROOT) -I$(SIREENROOT)/include
 BIN_LDFLAGS := $(LDFLAGS) -L$(LIBDIR) -L$(VLLIB) -lopencv_core \
-				-lopencv_imgproc -lopencv_highgui -lopencv_contrib -lvl
+				-lopencv_imgproc -lopencv_highgui -lopencv_contrib \
+				-lboost_thread -lboost_system -lvl
 
 # Mac OS X Intel 32
 ifeq ($(ARCH),maci)
