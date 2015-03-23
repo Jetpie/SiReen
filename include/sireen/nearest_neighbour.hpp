@@ -31,6 +31,10 @@
 #include <assert.h>
 #include <math.h>
 
+// boost thread locks
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 #include "sireen/metrics.hpp"
 #define NDEBUG
 using namespace std;
