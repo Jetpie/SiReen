@@ -22,6 +22,7 @@ void search_query(KDTree* t, double * qu)
     // 2.2 optimized basic search
     for(size_t j = 0 ; j < 10000; ++j)
     {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         clock_t start = clock();
 
         vector<Feature> search_result = t->knn_basic_opt(qu,10);
