@@ -140,23 +140,31 @@ namespace nnse
          */
         size_t leaf_size_;
 
-        // /**
-        //  * Release all the allocated memories
-        //  *
-        //  * @param a tree node
-        //  * @deperated because smart pointer for node class applied
-        //  */
-        // void release(NodePtr);
+        /**
+         * Release all the allocated memories
+         *
+         * @param a tree node
+         * @depercated because smart pointer for node class applied
+         */
+        void release(NodePtr);
 
         /**
-         * initialization of a subtree
+         * Initialization of a kd-tree node, this will set initial position
+         * of feature pointer, the number of feature should be taken and
+         * a default value for patition dimension
          *
          * @param features an array of features
          * @param n        number of features
+         *
+         * @return initialized kd-tree node, furthor expand should be
+         *         followed
          */
         NodePtr init_node(Feature *, const size_t);
         /**
-         * expand kd-tree after root node is initialized
+         * Expand the subtree. This should be called after a kd-tree
+         * node is initialized. If the current node is not a leaf, a
+         * partition is applied on features. Then, it expand the two
+         * children recursively.
          *
          * @param node current kd-tree node
          */
@@ -229,7 +237,7 @@ namespace nnse
          * First, traverse from root node to a leaf node and. Second,
          * backtrack to search for better node
          *
-         * @param feature query Feature
+         * @param feature query feature data in array form
          * @param k       number of nearest neighbour returned
          *
          * @return

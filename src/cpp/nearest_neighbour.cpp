@@ -26,21 +26,21 @@ namespace nnse
         // this->release(this->root_);
     }
 
-    // /**
-    //  * Release all the allocated memories
-    //  *
-    //  * @param a tree node
-    //  * @deperated because smart pointer for node class applied
-    //  */
-    // void
-    // KDTree::release(KDTreeNode* node)
-    // {
-    //     if(!node)
-    //         return;
-    //     this->release(node->left);
-    //     this->release(node->right);
-    //     delete node;
-    // }
+    /**
+     * Release all the allocated memories
+     *
+     * @param a tree node
+     * @depercated because smart pointer for node class applied
+     */
+    void
+    KDTree::release(KDTreeNode* node)
+    {
+        if(!node)
+            return;
+        this->release(node->left);
+        this->release(node->right);
+        delete node;
+    }
 
     /**
      * build the kd-tree structure from input features. The order is
@@ -465,7 +465,7 @@ namespace nnse
     }
     /**
      * Basic kd-tree search with optmization on comparison method.
-     * The comparison of distance use a early-stop startegy if current
+     * The comparison of distance use an early-stop strategy if current
      * cumulative squared integral is already over the greatest-smallest
      * value in the max-priority queue.
      *
