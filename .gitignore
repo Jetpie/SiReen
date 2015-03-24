@@ -12,3 +12,6 @@ src/ic/*#*
 
 # Ignore Mac specific files
 .DS_Store
+
+# Ignore doc directory
+doc/

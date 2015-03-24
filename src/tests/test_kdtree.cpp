@@ -148,12 +148,14 @@ int main()
         cout << search_result[i].index << endl;
     }
     cout << "--------------------" << endl;
+
     std::thread t1(build_kdtree,t,feats,n_data,100);
     std::thread t2(search_query,t,qu);
     std::thread t3(search_query,t,qu);
     t1.join();
     t2.join();
     t3.join();
+
     // Finally, delete resources
     for(size_t i = 0; i < n_data; ++i)
     {
