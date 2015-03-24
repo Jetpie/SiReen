@@ -22,24 +22,7 @@ namespace nnse
         dimension_(d),leaf_size_(leaf_size){}
     KDTree::~KDTree()
     {
-        cout << "report use_count:" << this->root_.use_count() << endl;
         // this->release(this->root_);
-    }
-
-    /**
-     * Release all the allocated memories
-     *
-     * @param a tree node
-     * @depercated because smart pointer for node class applied
-     */
-    void
-    KDTree::release(KDTreeNode* node)
-    {
-        if(!node)
-            return;
-        this->release(node->left);
-        this->release(node->right);
-        delete node;
     }
 
     /**
@@ -55,6 +38,7 @@ namespace nnse
     void
     KDTree::build(Feature* features, const size_t n)
     {
+
         // check inputs
         if(!features || n <= 0)
         {
@@ -63,12 +47,12 @@ namespace nnse
             return;
         }
         // init
-        NodePtr building= this->init_node(features, n);
+        NodePtr building = this->init_node(features, n);
         // sanity check for initialized root
         assert(building);
         // expand
         this->expand_subtree(building);
-
+        WriteLock writer(this->access_);
         this->root_ = building;
     }
 
@@ -386,6 +370,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_basic(double* feature, size_t k)
     {
+        ReadLock reader(this->access_);
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
@@ -477,6 +462,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_basic_opt(double* feature, size_t k)
     {
+        ReadLock reader(this->access_);
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
@@ -567,6 +553,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_bbf(double* feature, size_t k, size_t max_epoch)
     {
+        ReadLock reader(this->access_);
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
@@ -655,6 +642,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_bbf_opt(double* feature, size_t k, size_t max_epoch)
     {
+        ReadLock reader(this->access_);
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
