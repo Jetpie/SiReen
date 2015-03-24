@@ -26,22 +26,6 @@ namespace nnse
     }
 
     /**
-     * Release all the allocated memories
-     *
-     * @param a tree node
-     * @depercated because smart pointer for node class applied
-     */
-    void
-    KDTree::release(KDTreeNode* node)
-    {
-        if(!node)
-            return;
-        this->release(node->left);
-        this->release(node->right);
-        delete node;
-    }
-
-    /**
      * build the kd-tree structure from input features. The order is
      * building the node for indexing first and point the root node
      * to that built node. This is best design for multi-threading

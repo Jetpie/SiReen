@@ -153,14 +153,6 @@ namespace nnse
         size_t leaf_size_;
 
         /**
-         * Release all the allocated memories
-         *
-         * @param a tree node
-         * @depercated because smart pointer for node class applied
-         */
-        void release(NodePtr);
-
-        /**
          * Initialization of a kd-tree node, this will set initial position
          * of feature pointer, the number of feature should be taken and
          * a default value for patition dimension
