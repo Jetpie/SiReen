@@ -52,7 +52,7 @@ namespace nnse
         assert(building);
         // expand
         this->expand_subtree(building);
-        WriteLock writer(this->access_);
+
         this->root_ = building;
     }
 
@@ -370,7 +370,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_basic(double* feature, size_t k)
     {
-        ReadLock reader(this->access_);
+
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
@@ -462,7 +462,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_basic_opt(double* feature, size_t k)
     {
-        ReadLock reader(this->access_);
+
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
@@ -553,7 +553,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_bbf(double* feature, size_t k, size_t max_epoch)
     {
-        ReadLock reader(this->access_);
+
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
@@ -642,7 +642,7 @@ namespace nnse
     std::vector<Feature>
     KDTree::knn_bbf_opt(double* feature, size_t k, size_t max_epoch)
     {
-        ReadLock reader(this->access_);
+
         // best result buffer
         vector<Feature> nbrs;
         nbrs.reserve(k);
