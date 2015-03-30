@@ -52,7 +52,7 @@ ImageCoder::ImageCoder(VlDsiftFilter* filter)
  */
 ImageCoder::~ImageCoder(void){
     vl_dsift_delete(this->dsift_filter_);
-    delete this->image_data_;
+    delete [] this->image_data_;
 }
 
 /**
@@ -96,15 +96,15 @@ ImageCoder::set_params(int std_width, int std_height, int step, int bin_size)
     }
 }
 
-
 /**
- * encode dense-sift descriptors
+ * decode image to graylevel resized values by row-order.
  *
  * @param src_image opencv Mat image
- * @return the dense sift float-point descriptors
+ *
+ * @return image pixel values in row-major order
  */
 float*
-ImageCoder::dsift_descriptor(Mat src_image)
+ImageCoder::decode_image(Mat src_image)
 {
     // check if source image is graylevel
     if (src_image.channels() != 1)
@@ -133,10 +133,20 @@ ImageCoder::dsift_descriptor(Mat src_image)
             this->image_data_[i*src_image.cols+j] = row_ptr[j];
         }
     }
+    return this->image_data_;
+}
 
+/**
+ * encode dense-sift descriptors
+ *
+ * @param image pixel values in row-major order
+ * @return the dense sift float-point descriptors
+ */
+float*
+ImageCoder::dsift_descriptor(float* image_data)
+{
     // process an image data
-    vl_dsift_process(this->dsift_filter_,this->image_data_);
-
+    vl_dsift_process(this->dsift_filter_,image_data);
     // return the (unnormalized) sift descriptors
     // by default, the vlfeat library has normalized the descriptors
     // our following  normalization eliminates those peaks (big value gradients)
@@ -145,21 +155,33 @@ ImageCoder::dsift_descriptor(Mat src_image)
 }
 
 /**
- * compute linear local constraint coding descriptor
+ * encode dense-sift descriptors
  *
- * @param src_image source image in opencv mat format
- * @param codebook  codebook from sift-kmeans
- * @param ncb       dimension of codebook
- * @param k         get top k nearest codes
- *
- * @return a conversion from llc feature to string
+ * @param src_image opencv Mat image
+ * @return the dense sift float-point descriptors
  */
-string
-ImageCoder::llc_descriptor(Mat src_image, float *codebook,
-                          const int ncb, const int k)
+float*
+ImageCoder::dsift_descriptor(Mat src_image)
 {
+    return dsift_descriptor(decode_image(src_image));
+}
 
-    float* dsift_descr = this->dsift_descriptor(src_image);
+/**
+ * compute linear local constraint coding descriptor from dsift
+ * descriptors
+ *
+ * @param dsift_descr dsift descriptors
+ * @param codebook    codebook from sift-kmeans
+ * @param ncb         dimension of codebook
+ * @param k           get top k nearest codes
+ * @param out         output vector will take the llc result
+ *
+ * @return Eigen vector take the llc valuex
+ */
+Eigen::VectorXf
+ImageCoder::llc_process(float* dsift_descr, float *codebook,
+                           const int ncb, const int k)
+{
     if(!dsift_descr)
         throw runtime_error("image not loaded or resized properly");
     // get sift descriptor size and number of keypoints
@@ -246,7 +268,58 @@ ImageCoder::llc_descriptor(Mat src_image, float *codebook,
 
     // normalization
     llc.normalize();
-
+    return llc;
+}
+/**
+ * compute linear local constraint coding descriptor
+ *
+ * @param dsift_descr dsift descriptors
+ * @param codebook    codebook from sift-kmeans
+ * @param ncb         dimension of codebook
+ * @param k           get top k nearest codes
+ * @param out         output vector will take the llc result
+ *
+ * @return a conversion from llc feature to string
+ */
+string
+ImageCoder::llc_descriptor(float* image_data, float *codebook,
+                           const int ncb, const int k, vector<float> &out)
+{
+    float* dsift_descr = dsift_descriptor(image_data);
+    VectorXf llc = llc_process(dsift_descr,codebook,ncb,k);
+    if(!out.empty())
+    {
+        out.clear();
+    }
+    // output the result in squeezed form
+    // (i.e. bis after floating points are omitted)
+    ostringstream s;
+    s << llc(0);
+    out.push_back(llc(0));
+    for(int i=1; i<ncb; ++i)
+    {
+        s << ",";
+        s << llc(i);
+        out.push_back(llc(i));
+    }
+    return s.str();
+}
+/**
+ * compute linear local constraint coding descriptor
+ *
+ * @param src_image source image in opencv mat format
+ * @param codebook  codebook from sift-kmeans
+ * @param ncb       dimension of codebook
+ * @param k         get top k nearest codes
+ *
+ * @return a conversion from llc feature to string
+ */
+string
+ImageCoder::llc_descriptor(Mat src_image, float *codebook,
+                          const int ncb, const int k)
+{
+    float* dsift_descr = dsift_descriptor(src_image);
+    VectorXf llc = llc_process(dsift_descr,codebook,ncb,k);
     // output the result in squeezed form
     // (i.e. bis after floating points are omitted)
     ostringstream s;
@@ -256,10 +329,9 @@ ImageCoder::llc_descriptor(Mat src_image, float *codebook,
         s << ",";
         s << llc(i);
     }
-
     return s.str();
-}
 
+}
 /**
  * Optimized sift feature improvement and normalization
  *

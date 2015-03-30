@@ -55,9 +55,10 @@ private:
     unsigned int bin_size_;
     // dsift filter
     VlDsiftFilter* dsift_filter_;
-    // image data buffer
+    // image data buffer, in vlfeat, vl_sift_pix is general used
+    // vl_sift_pix is infact a symbolic link to float
     // the buffer always contains current image pixel values
-    vl_sift_pix* image_data_;
+    float* image_data_;
     /**
      * set parameters for ImageCoder
      *
@@ -67,6 +68,28 @@ private:
      * @param bin_size   VlDsiftFilter binSize parameter
      */
     void set_params(int, int, int, int);
+    /**
+     * decode image to graylevel resized values by row-order.
+     *
+     * @param src_image opencv Mat image
+     *
+     * @return image data values
+     */
+    float* decode_image(Mat);
+    /**
+     * compute linear local constraint coding descriptor from dsift
+     * descriptors
+     *
+     * @param dsift_descr dsift descriptors
+     * @param codebook    codebook from sift-kmeans
+     * @param ncb         dimension of codebook
+     * @param k           get top k nearest codes
+     * @param out         output vector will take the llc result
+     *
+     * @return Eigen vector take the llc valuex
+     */
+    VectorXf llc_process(float* dsift_descr, float *codebook,
+                         const int ncb, const int k);
 
 
 public:
@@ -90,10 +113,29 @@ public:
     /**
      * encode dense-sift descriptors
      *
+     * @param image pixel values in row-major order
+     * @return the dense sift float-point descriptors
+     */
+    float* dsift_descriptor(float*);
+    /**
+     * encode dense-sift descriptors
+     *
      * @param src_image opencv Mat image
      * @return the dense sift float-point descriptors
      */
     float* dsift_descriptor(Mat);
+    /**
+     * compute linear local constraint coding descriptor
+     *
+     * @param dsift_descr dsift descriptors
+     * @param codebook  codebook from sift-kmeans
+     * @param ncb       dimension of codebook
+     * @param k         get top k nearest codes
+     * @param out       output vector will take the llc result
+     *
+     * @return a conversion from llc feature to string
+     */
+    string llc_descriptor(float* , float*, const int, const int, vector<float> &);
     /**
      * compute linear local constraint coding descriptor
      *
@@ -105,6 +147,7 @@ public:
      * @return a conversion from llc feature to string
      */
     string llc_descriptor(Mat, float*, const int, const int);
+
     /**
      * Optimized sift feature improvement and normalization
      *
