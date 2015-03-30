@@ -9,6 +9,20 @@
 #include <Eigen/Dense>
 using namespace std;
 using namespace Eigen;
+float* eigen_mat_test()
+{
+    vector<float> v;
+    v.push_back(1.0);
+    v.push_back(2.0);
+    return &v[0];
+}
+void print_vector(float *x)
+{
+    for(size_t i = 0; i < 2; ++i)
+    {
+        cout << x[i] << endl;
+    }
+}
 int main(int argc, char * argv[])
 {
     string images[] = {"test1.jpg","test2.jpg","test3.jpg","test4.jpg","test5.jpg","test6.jpg"};
@@ -54,6 +68,7 @@ int main(int argc, char * argv[])
         start= clock();
         try{
             llc_test = ic.llc_descriptor(src_new, codebook, 500, 5);
+
             // cout << llc_test<<endl;
             futil::string_to_file("/home/bingqingqu/TAOCP/Datasets/test/result_new.txt",
                             llc_test, "a+");
@@ -64,10 +79,23 @@ int main(int argc, char * argv[])
         cout << "time test:" << float(clock() -start)/CLOCKS_PER_SEC << endl;
         // cout << llc_test<<endl;
     }
-    delete codebook;
+    delete [] codebook;
     string directory = "/home/bingqingqu/TAOCP/Datasets/test/";
     vector<string> files_in_dir;
     futil::get_files_in_dir(files_in_dir,directory);
     cout << files_in_dir[0]<<","<<files_in_dir[1] << endl;
 
+
+    // Vector2f v(5.0,6.0);
+    // float* vvv = eigen_mat_test();
+    // for(size_t i = 0; i< 2; ++i)
+    //     cout << vvv[i] << "," << endl;
+    vector<float> xxx;
+    xxx.reserve(100);
+    xxx.push_back(0.5);
+    cout << xxx.capacity() << endl;
+    cout << xxx.size() << endl;
+    xxx.clear();
+    cout << xxx.capacity() << endl;
+    cout << xxx.size() << endl;
 }
