@@ -10,17 +10,41 @@ n_error = 0;
 for i = 1:num
     disp(['computation progress: ' num2str(i) '/' num2str(num)]);
     try
-        I = rgb2gray(imresize(imread([image_path images(i).name]),[128,128]));
+%         I = rgb2gray(imresize(imread([image_path images(i).name]),[128,128]));
+         I = rgb2gray(imresize(imread([image_path images(i).name]),[128,128]));  
     catch
         n_error = n_error + 1;
         continue
     end
-    features = compute_dsift_SPRS(I,sigma);
+%     features = compute_dsift_SPRS(I,sigma);
+    features = compute_sift(I);
     save ([descriptor_path,'desc_',images(i).name(1:end-4) '.mat'], 'features');
 end
 disp(['n_error: ' num2str(n_error)]);
 
 end
+
+%% compute sift
+function features = compute_sift(I)
+
+if length(size(I)) ~= 1
+    I = I(:,:,1);
+end
+
+
+I = im2single(I);
+[hgt, wid] = size(I);
+[positions, siftArr] = vl_sift(I);
+siftArr = double(siftArr)';
+siftArr = normalize_sift(siftArr);
+features.data = siftArr;
+features.x = positions(1,:);
+features.y = positions(2,:);
+features.width = wid;
+features.height = hgt;
+
+end
+
 
 % compute dsift
 function features = compute_dsift_SPRS(I,sigma)

@@ -20,6 +20,7 @@
 ImageCoder::ImageCoder(void)
 {
     this->dsift_filter_ = NULL;
+    this->sift_filter_ = NULL;
     /* default setting */
     this->set_params(128,128,8,16);
 }
@@ -29,6 +30,7 @@ ImageCoder::ImageCoder(void)
 ImageCoder::ImageCoder(int std_width, int std_height, int step, int bin_size)
 {
     this->dsift_filter_ = NULL;
+    this->sift_filter_ = NULL;
     this->set_params(std_width,std_height,step,bin_size);
 }
 /**
@@ -52,6 +54,7 @@ ImageCoder::ImageCoder(VlDsiftFilter* filter)
  */
 ImageCoder::~ImageCoder(void){
     vl_dsift_delete(this->dsift_filter_);
+    vl_sift_delete(this->sift_filter_);
     delete [] this->image_data_;
 }
 
@@ -66,6 +69,8 @@ ImageCoder::~ImageCoder(void){
 void
 ImageCoder::set_params(int std_width, int std_height, int step, int bin_size)
 {
+
+
     this->std_width_ = std_width;
     this->std_height_ = std_height;
     this->step_ = step;
@@ -74,7 +79,6 @@ ImageCoder::set_params(int std_width, int std_height, int step, int bin_size)
     // if dsift filter was initialized
     if(this->dsift_filter_)
     {
-        cout<< "set filter from EXIST"<<endl;
         this->dsift_filter_->imWidth = std_width_;
         this->dsift_filter_->imHeight = std_height_;
         VlDsiftDescriptorGeometry geom =
@@ -86,14 +90,21 @@ ImageCoder::set_params(int std_width, int std_height, int step, int bin_size)
     }
     else
     {
-        cout<< "set filter from NULL"<<endl;
-
         this->dsift_filter_ =
             vl_dsift_new_basic(std_width, std_height, step, bin_size);
 
         // switch off gaussian windowing
         vl_dsift_set_flat_window(this->dsift_filter_,true);
     }
+
+    // initialize sift filter
+    int n_octaves = -1;
+    int n_levels = 3;
+    int o_min = 0;
+    this->sift_filter_ = vl_sift_new(std_width_, std_height_, n_octaves,
+                                     n_levels, o_min);
+    vl_sift_set_peak_thresh(sift_filter_, 5);
+    vl_sift_set_edge_thresh(sift_filter_, 15);
 }
 
 /**
@@ -155,15 +166,72 @@ ImageCoder::dsift_descriptor(float* image_data)
 }
 
 /**
- * encode dense-sift descriptors
+ * encode sift descriptors
  *
- * @param src_image opencv Mat image
+ * @param image pixel values in row-major order
  * @return the dense sift float-point descriptors
  */
-float*
-ImageCoder::dsift_descriptor(Mat src_image)
+void
+ImageCoder::sift_descriptor(float* image_data, int& n_keypoints, vector<float>& sift_descr)
 {
-    return dsift_descriptor(decode_image(src_image));
+    // reset n_keypoints
+    n_keypoints = 0;
+    int first = 1;
+    int err = 0;
+    VlSiftKeypoint const *keys = 0;
+    int i,j;
+    int estimate = 128;
+    int n_angles = 0;
+    int n_keys = 0;
+    // reserve memory for vector
+    sift_descr.reserve(estimate);
+    while(err!=VL_ERR_EOF)
+    {
+        // Compute the next octave of the DOG scale space
+        if (first) {
+            err   = vl_sift_process_first_octave(sift_filter_, image_data);
+            first = 0 ;
+        } else {
+            err   = vl_sift_process_next_octave(sift_filter_);
+        }
+
+        // Run the SIFT detector
+        vl_sift_detect(sift_filter_);
+        keys = vl_sift_get_keypoints(sift_filter_);
+        n_keys = vl_sift_get_nkeypoints(sift_filter_);
+
+        // For each keypoint
+        for(i=0; i < n_keys;++i)
+        {
+            VlSiftKeypoint const *k;
+
+            k = keys + i;
+            // cout << k->ix <<"," << k->iy << endl;
+            // get the keypoint orientation(s)
+            double angles[4];
+            n_angles = vl_sift_calc_keypoint_orientations(sift_filter_,angles,k);
+            // cout << "n_angles:" << n_angles <<endl;
+
+            // For each orientation
+            for(j=0;j<n_angles;++j)
+            {
+                vl_sift_pix descr_buf[128];
+                vl_sift_calc_keypoint_descriptor(sift_filter_,descr_buf,k,angles[j]);
+
+                ++n_keypoints;
+                if(n_keypoints >= estimate)
+                    estimate *= 2;
+                sift_descr.reserve(estimate);
+                // collect sift features to final vector
+                std::copy(descr_buf, descr_buf+128, back_inserter(sift_descr));
+            }
+        }
+    }
+    // cout << sift_descr.size() << endl;
+    // cout << "sift_descr"<< endl;
+    // for(vector<float>::iterator it(sift_descr.begin()); it!=sift_descr.end();++it)
+    //     cout << " " << *it;
+    // cout << endl;
 }
 
 /**
@@ -179,15 +247,21 @@ ImageCoder::dsift_descriptor(Mat src_image)
  * @return Eigen vector take the llc valuex
  */
 Eigen::VectorXf
-ImageCoder::llc_process(float* dsift_descr, float *codebook,
-                           const int ncb, const int k)
+ImageCoder::llc_process(float* dsift_descr, float *codebook, const int ncb,
+                        const int k, const int descr_size, const int n_keypoints)
 {
     if(!dsift_descr)
         throw runtime_error("image not loaded or resized properly");
-    // get sift descriptor size and number of keypoints
-    int descr_size = vl_dsift_get_descriptor_size(dsift_filter_);
-    int n_keypoints = vl_dsift_get_keypoint_num(dsift_filter_);
+    if(n_keypoints == 0)
+    {
+        return VectorXf::Zero(ncb);
+    }
+    // cout << "image_data" << endl;
+    // for(int i=0;i<descr_size*n_keypoints;++i)
+    //     cout << "," << dsift_descr[i];
+    // cout << endl;
 
+    // cout << "matrix" << endl;
     // eliminate peak gradients and normalize
     // initialize dsift descriptors and codebook Eigen matrix
     MatrixXf mat_dsift= this->norm_sift(dsift_descr,descr_size,n_keypoints,true);
@@ -198,6 +272,7 @@ ImageCoder::llc_process(float* dsift_descr, float *codebook,
     // be nomalized to sum square 1, we arrange the distance as following
     MatrixXi knn_idx(n_keypoints, k);
     MatrixXf cdist(n_keypoints,ncb);
+
     // get euclidean distance of pairwise column features
     // use the trick of (u-v)^2 = u^2 + v^2 - 2uv
     // with assumption of Eigen column-wise manipulcation
@@ -265,6 +340,7 @@ ImageCoder::llc_process(float* dsift_descr, float *codebook,
     // Step 3 - get the llc descriptor and normalize
     // get max coofficient for each column
     VectorXf llc = caches.colwise().maxCoeff();
+    // VectorXf llc = caches.colwise().sum();
 
     // normalization
     llc.normalize();
@@ -282,11 +358,16 @@ ImageCoder::llc_process(float* dsift_descr, float *codebook,
  * @return a conversion from llc feature to string
  */
 string
-ImageCoder::llc_descriptor(float* image_data, float *codebook,
-                           const int ncb, const int k, vector<float> &out)
+ImageCoder::llc_dense_sift(float* image_data, float *codebook, const int ncb,
+                           const int k, vector<float> &out)
 {
     float* dsift_descr = dsift_descriptor(image_data);
-    VectorXf llc = llc_process(dsift_descr,codebook,ncb,k);
+
+    // get sift descriptor size and number of keypoints
+    int descr_size = vl_dsift_get_descriptor_size(dsift_filter_);
+    int n_keypoints = vl_dsift_get_keypoint_num(dsift_filter_);
+
+    VectorXf llc = llc_process(dsift_descr,codebook,ncb,k, descr_size, n_keypoints);
     if(!out.empty())
     {
         out.clear();
@@ -315,13 +396,38 @@ ImageCoder::llc_descriptor(float* image_data, float *codebook,
  * @return a conversion from llc feature to string
  */
 string
-ImageCoder::llc_descriptor(Mat src_image, float *codebook,
-                          const int ncb, const int k)
+ImageCoder::llc_dense_sift(Mat src_image, float *codebook, const int ncb, const int k)
 {
-    float* dsift_descr = dsift_descriptor(src_image);
-    VectorXf llc = llc_process(dsift_descr,codebook,ncb,k);
+    float* image_data = decode_image(src_image);
+    float* dsift_descr = dsift_descriptor(image_data);
+    // get sift descriptor size and number of keypoints
+    int descr_size = vl_dsift_get_descriptor_size(dsift_filter_);
+    int n_keypoints = vl_dsift_get_keypoint_num(dsift_filter_);
+
+    VectorXf llc = llc_process(dsift_descr,codebook,ncb,k,descr_size,n_keypoints);
     // output the result in squeezed form
     // (i.e. bis after floating points are omitted)
+    ostringstream s;
+    s << llc(0);
+    for(int i=1; i<ncb; ++i)
+    {
+        s << ",";
+        s << llc(i);
+    }
+    return s.str();
+
+}
+
+string
+ImageCoder::llc_sift(Mat src_image, float *codebook, const int ncb, const int k)
+{
+    int n_keypoints = 0;
+    const int descr_size = 128;
+    float* image_data = this->decode_image(src_image);
+    vector<float> sift_descr;
+    this->sift_descriptor(image_data,n_keypoints,sift_descr);
+    VectorXf llc = llc_process(&sift_descr[0],codebook,ncb,k,descr_size,n_keypoints);
+
     ostringstream s;
     s << llc(0);
     for(int i=1; i<ncb; ++i)
@@ -348,6 +454,9 @@ ImageCoder::norm_sift(float *descriptors, int row, int col,
 {
     // use Eigen Map to pass float* to MatrixXf
     Map<MatrixXf> mat_dsift(descriptors,row,col);
+    // cout << "mat_dsift " << endl;
+    // cout << mat_dsift.col(col-1)<< endl;
+
     // clock_t s = clock();
     // check flag if the input is already normalized
     if(normalized)
@@ -382,5 +491,6 @@ ImageCoder::norm_sift(float *descriptors, int row, int col,
 
         }
     }
+
     return mat_dsift;
 }

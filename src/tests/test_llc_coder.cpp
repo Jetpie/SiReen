@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
         string llc_test;
         start= clock();
         try{
-            llc_test = ic.llc_descriptor(src_new, codebook, 500, 5);
+            llc_test = ic.llc_sift(src_new, codebook, 500, 5);
 
             // cout << llc_test<<endl;
             futil::string_to_file("/home/bingqingqu/TAOCP/Datasets/test/result_new.txt",
@@ -84,6 +84,23 @@ int main(int argc, char * argv[])
     vector<string> files_in_dir;
     futil::get_files_in_dir(files_in_dir,directory);
     cout << files_in_dir[0]<<","<<files_in_dir[1] << endl;
+
+    // vector<float> test_descr;
+    // float * descr_buf = new float[128];
+    // for(int i=0;i<128;++i)
+    // {
+    //     descr_buf[i] = 1.5;
+    // }
+    // std::copy(descr_buf, descr_buf+128, back_inserter(test_descr));
+    // std::copy(descr_buf, descr_buf+128, back_inserter(test_descr));
+    // delete [] descr_buf;
+    // for(vector<float>::iterator it(test_descr.begin()); it!=test_descr.end();++it)
+    //     cout << " " << *it;
+    // cout << endl;
+    // float *descr_ptr = &test_descr[0];
+    // for(int i=0;i<256;++i)
+    //     cout << " " << descr_ptr[i] ;
+    // cout << endl;
 
 
     // Vector2f v(5.0,6.0);

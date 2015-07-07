@@ -19,6 +19,7 @@
 #include <string.h>
 #include <queue>
 #include <stdexcept>
+#include <algorithm>
 
 // opencv header
 #include <opencv2/opencv.hpp>
@@ -45,6 +46,7 @@ class ImageCoder
 {
 
 private:
+    /** DSIFT MEMBERS */
     // standard resize width
     int std_width_;
     // standard resize height
@@ -55,10 +57,16 @@ private:
     unsigned int bin_size_;
     // dsift filter
     VlDsiftFilter* dsift_filter_;
+
     // image data buffer, in vlfeat, vl_sift_pix is general used
     // vl_sift_pix is infact a symbolic link to float
     // the buffer always contains current image pixel values
     float* image_data_;
+
+    /** SIFT MEMBERS */
+    // sift filter
+    VlSiftFilt* sift_filter_;
+
     /**
      * set parameters for ImageCoder
      *
@@ -88,8 +96,7 @@ private:
      *
      * @return Eigen vector take the llc valuex
      */
-    VectorXf llc_process(float* dsift_descr, float *codebook,
-                         const int ncb, const int k);
+    VectorXf llc_process(float*, float*, const int, const int, const int, const int);
 
 
 public:
@@ -117,13 +124,7 @@ public:
      * @return the dense sift float-point descriptors
      */
     float* dsift_descriptor(float*);
-    /**
-     * encode dense-sift descriptors
-     *
-     * @param src_image opencv Mat image
-     * @return the dense sift float-point descriptors
-     */
-    float* dsift_descriptor(Mat);
+    void sift_descriptor(float*, int&, vector<float>&);
     /**
      * compute linear local constraint coding descriptor
      *
@@ -135,7 +136,7 @@ public:
      *
      * @return a conversion from llc feature to string
      */
-    string llc_descriptor(float* , float*, const int, const int, vector<float> &);
+    string llc_dense_sift(float* , float*, const int, const int, vector<float> &);
     /**
      * compute linear local constraint coding descriptor
      *
@@ -146,7 +147,8 @@ public:
      *
      * @return a conversion from llc feature to string
      */
-    string llc_descriptor(Mat, float*, const int, const int);
+    string llc_dense_sift(Mat, float*, const int, const int);
+    string llc_sift(Mat, float*, const int, const int);
 
     /**
      * Optimized sift feature improvement and normalization

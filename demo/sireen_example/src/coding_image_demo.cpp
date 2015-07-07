@@ -12,9 +12,9 @@ int main(int argc, char * argv[]) {
     /*********************************************
      *  Step 0 - optget to receive input option
      *********************************************/
-    char result_buf[256]= "res/llc/msrc_ocid_v2.txt";
-    char codebook_buf[256]= "res/codebooks/msrc_ocid_v2/cbmsrc_ocid_v2.txt";
-    char image_dir_buf[256]= "res/images/msrc_ocid_v2";
+    char result_buf[256]= "res/llc/caltech101.txt";
+    char codebook_buf[256]= "res/codebooks/caltech101/cbcaltech101.txt";
+    char image_dir_buf[256]= "res/images/caltech101";
     /*	CHECK THE INPUT OPTIONS	*/
     //initialize the arg options
     int opt;
@@ -109,7 +109,8 @@ int main(int argc, char * argv[]) {
                 cout << "\tinvalid source image! --> " << imgfile << endl;
                 continue;
             }
-            llcstr = icoder.llc_descriptor(src_image, codebook, CB_SIZE, 5);
+            llcstr = icoder.llc_sift(src_image, codebook, CB_SIZE, 5);
+            // cout << llcstr << endl;
         }
         catch(...)
         {
